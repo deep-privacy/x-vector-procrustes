@@ -1,0 +1,30 @@
+ASV-libri_test_enrolls-libri_test_trials_f
+  EER: 7.664%
+  Cllr (min/act): 0.184/26.793
+  ROCCH-EER: 7.165%
+ASV-libri_test_enrolls-libri_test_trials_f_anon
+  EER: 49.82%
+  Cllr (min/act): 0.997/224.887
+  ROCCH-EER: 48.458%
+ASV-libri_test_enrolls-libri_test_trials_m
+  EER: 1.114%
+  Cllr (min/act): 0.041/15.303
+  ROCCH-EER: 1.046%
+ASV-libri_test_enrolls-libri_test_trials_m_anon
+  EER: 48.33%
+  Cllr (min/act): 0.988/228.457
+  ROCCH-EER: 46.959%
+ASV-libri_test_enrolls_anon-libri_test_trials_f_anon
+  EER: 41.97%
+  Cllr (min/act): 0.951/44.489
+  ROCCH-EER: 41.168%
+ASV-libri_test_enrolls_anon-libri_test_trials_m_anon
+  EER: 46.33%
+  Cllr (min/act): 0.977/32.346
+  ROCCH-EER: 45.190%
+ASR-libri_test_asr
+  %WER 5.55 [ 1944 / 35042, 214 ins, 197 del, 1533 sub ] exp/models/asr_eval/decode_libri_test_asr_tgsmall/wer_13_0.0
+  %WER 4.14 [ 1452 / 35042, 172 ins, 158 del, 1122 sub ] exp/models/asr_eval/decode_libri_test_asr_tglarge/wer_12_1.0
+ASR-libri_test_asr_anon
+  %WER 9.29 [ 3257 / 35042, 259 ins, 476 del, 2522 sub ] exp/models/asr_eval/decode_libri_test_asr_anon_tgsmall/wer_16_0.0
+  %WER 6.75 [ 2365 / 35042, 220 ins, 314 del, 1831 sub ] exp/models/asr_eval/decode_libri_test_asr_anon_tglarge/wer_15_0.5

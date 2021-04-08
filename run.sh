@@ -24,12 +24,15 @@ if [ $stage -le -1 ]; then
   for anon_exp_parameter in \
   "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker" \
   "x_vector_vpc__crossgender=false__f0transformation=true__diffpseudospeaker" \
+  "x_vector_vpc__crossgender=true__f0transformation=false__diffpseudospeaker" \
+  "x_vector_vpc__crossgender=true__f0transformation=true__diffpseudospeaker" \
   ;do
 
+  printf "$anon_exp_parameter\n"
     for suffix in "" "_anon"; do
       for original_dset in xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls; do
         original_dset=${original_dset}${suffix}
-        printf "$original_dset\n"
+        printf "  $original_dset\n"
         python ./align.py \
            ./data/$anon_exp_parameter/$original_dset/xvector.scp \
            ./data/$anon_exp_parameter/$anon_dset/xvector.scp --test > /dev/null

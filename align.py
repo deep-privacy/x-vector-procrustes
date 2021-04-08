@@ -35,6 +35,7 @@ with ReadHelper(f'scp:{args.x_vector_trials}') as reader:
 
 if args.test:
     print("Scp files could be read")
+    sys.exit(0)
 
 
 if args.filter_scp_trials_enrolls:
