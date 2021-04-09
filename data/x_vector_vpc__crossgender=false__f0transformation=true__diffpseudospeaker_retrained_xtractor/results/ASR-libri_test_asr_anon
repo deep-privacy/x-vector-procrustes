@@ -1,0 +1,2 @@
+%WER 6.34 [ 2222 / 35042, 233 ins, 237 del, 1752 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_anon_tgsmall/wer_12_0.0
+%WER 4.77 [ 1671 / 35042, 190 ins, 176 del, 1305 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_anon_tglarge/wer_12_0.5

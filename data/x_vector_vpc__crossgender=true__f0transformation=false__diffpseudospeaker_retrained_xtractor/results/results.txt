@@ -1,0 +1,42 @@
+ASV-libri_test_enrolls-libri_test_trials_f
+  EER: 14.05%
+  Cllr (min/act): 0.469/10.527
+  ROCCH-EER: 13.980%
+ASV-libri_test_enrolls-libri_test_trials_f_anon
+  EER: 50.18%
+  Cllr (min/act): 0.998/76.995
+  ROCCH-EER: 49.048%
+ASV-libri_test_enrolls-libri_test_trials_m
+  EER: 11.8%
+  Cllr (min/act): 0.405/15.844
+  ROCCH-EER: 11.623%
+ASV-libri_test_enrolls-libri_test_trials_m_anon
+  EER: 46.1%
+  Cllr (min/act): 0.978/56.427
+  ROCCH-EER: 44.804%
+ASV-libri_test_enrolls_anon-libri_test_trials_f_anon
+  EER: 29.93%
+  Cllr (min/act): 0.769/8.551
+  ROCCH-EER: 29.746%
+ASV-libri_test_enrolls_anon-libri_test_trials_m_anon
+  EER: 28.73%
+  Cllr (min/act): 0.786/10.742
+  ROCCH-EER: 28.289%
+ASR-libri_test_asr
+  %WER 18.70 [ 6552 / 35042, 535 ins, 1423 del, 4594 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_tgsmall/wer_13_0.0
+  %WER 14.03 [ 4918 / 35042, 581 ins, 867 del, 3470 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_tglarge/wer_13_0.0
+ASR-libri_test_asr_anon
+  %WER 6.64 [ 2327 / 35042, 232 ins, 268 del, 1827 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_anon_tgsmall/wer_13_0.0
+  %WER 4.99 [ 1747 / 35042, 237 ins, 155 del, 1355 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_anon_tglarge/wer_12_0.0
+ASR-libri_test_asr_f
+  %WER 18.47 [ 3891 / 21067, 303 ins, 772 del, 2816 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_f_tgsmall/wer_14_0.0
+  %WER 13.95 [ 2938 / 21067, 313 ins, 493 del, 2132 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_f_tglarge/wer_14_0.0
+ASR-libri_test_asr_f_anon
+  %WER 6.74 [ 1419 / 21067, 134 ins, 169 del, 1116 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_f_anon_tgsmall/wer_13_0.0
+  %WER 5.14 [ 1082 / 21067, 102 ins, 148 del, 832 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_f_anon_tglarge/wer_12_1.0
+ASR-libri_test_asr_m
+  %WER 19.88 [ 4220 / 21230, 387 ins, 884 del, 2949 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_m_tgsmall/wer_12_0.0
+  %WER 15.20 [ 3228 / 21230, 394 ins, 618 del, 2216 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_m_tglarge/wer_13_0.0
+ASR-libri_test_asr_m_anon
+  %WER 6.68 [ 1419 / 21230, 152 ins, 154 del, 1113 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_m_anon_tgsmall/wer_13_0.0
+  %WER 4.90 [ 1040 / 21230, 157 ins, 74 del, 809 sub ] exp/models/asr_eval_b1_anon/decode_libri_test_asr_m_anon_tglarge/wer_11_0.0
