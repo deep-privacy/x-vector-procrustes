@@ -40,8 +40,11 @@ if [ $stage -le -1 ]; then
         original_dset=${original_dset}${suffix}
         printf "  $original_dset\n"
         python ./prep_dset.py \
-           ./data/$anon_exp_parameter/$original_dset/xvector.scp \
-           ./data/$anon_exp_parameter/$anon_dset/xvector.scp --test > /dev/null
+          ./data/$anon_exp_parameter/$original_dset/xvector.scp \
+          ./data/$anon_exp_parameter/$original_dset/xvector.scp  \
+          "/tmp/test/Emb_U" "/tmp/test/User_U" \
+          "/tmp/test/Emb_L" "/tmp/test/User_L" \
+          --test
       done
     done
   done
@@ -81,9 +84,12 @@ fi
 
 if [ $stage -le 1 ]; then
   printf "${GREEN}== Training procrustes uv ==${NC}\n"
+
+  expe_dir=exp/enroll_train_uv
+
   python ./Wasserstein_Procrustes.py \
-    --emb_src exp/enroll_train_uv/Emb_U.npy \
-    --label_src exp/enroll_train_uv/User_U.npy \
-    --emb_tgt exp/enroll_train_uv/Emb_L.npy \
-    --label_tgt exp/enroll_train_uv/User_L.npy
+    --emb_src $expe_dir/Emb_U.npy \
+    --label_src $expe_dir/User_U.npy \
+    --emb_tgt $expe_dir/Emb_L.npy \
+    --label_tgt $expe_dir/User_L.npy
 fi

@@ -56,7 +56,6 @@ with ReadHelper(f"scp:{args.x_vector_l}") as reader:
         x_vector_l[key] = numpy_array
 
 if args.test:
-    print("All scp files could be read")
     sys.exit(0)
 
 

@@ -9,7 +9,6 @@ from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 from tqdm import tqdm
-import time
 import argparse
 
 import warnings
@@ -21,10 +20,10 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Wasserstein Procrustes for Embedding Alignment"
     )
-    parser.add_argument("--emb_src", type=str, help="Path to source word embeddings")
-    parser.add_argument("--emb_tgt", type=str, help="Path to target word embeddings")
-    parser.add_argument("--label_src", type=str, help="Path to source word embeddings")
-    parser.add_argument("--label_tgt", type=str, help="Path to target word embeddings")
+    parser.add_argument("--emb_src", type=str, help="Path to source embeddings")
+    parser.add_argument("--emb_tgt", type=str, help="Path to target embeddings")
+    parser.add_argument("--label_src", type=str, help="Path to source labels")
+    parser.add_argument("--label_tgt", type=str, help="Path to target labels")
 
     parser.add_argument(
         "--seed", default=1111, type=int, help="Random number generator seed"
@@ -88,8 +87,6 @@ def align(
     verbose,
     last_iter,
 ):
-    t0 = time.time()
-
     for epoch in range(1, nepoch + 1):
         for _it in (
             tqdm(range(1, niter + 1), desc="alignment n°" + str(epoch))
@@ -112,24 +109,25 @@ def align(
         bsz *= 2
         bsz = min(bsz, min(len(X), len(Y)))
         niter //= 2
-        # niter = max(niter,50)
+
         if verbose:
-            t = int(time.time() - t0)
             print(
-                "epoch: %d  obj: %.3f  time: %d %d \t"
-                % (epoch, objective(X, Y, R), t // 60, t % 60),
-                bsz,
-                niter,
-            )
-            print(
-                np.mean(
-                    [
-                        np.linalg.norm(Y[i] - np.dot(Y[corres[i]], R))
-                        for i in range(len(Y))
-                    ]
-                )
+                "epoch: %d\t batchSize: %d\t niter: %d\t obj: %.3f\t distance: %.4f"
+                % (
+                    epoch,
+                    objective(X, Y, R),
+                    bsz,
+                    niter,
+                    np.mean(
+                        [
+                            np.linalg.norm(Y[i] - np.dot(Y[corres[i]], R))
+                            for i in range(len(Y))
+                        ]
+                    ),
+                ),
             )
         if niter == 0 or ((not last_iter) and bsz >= min(len(X), len(Y))):
+            print("Stopping alignment batchSize %d > total labels" % bsz)
             break
     if verbose:
         print("Alignment Done")
@@ -221,28 +219,15 @@ def KMeans_reshape(Emb, User, K):
     return nE, nU
 
 
-def Wasserstein_Procrustes_Alignment(
-    args,
-    verbose=False,
-    last_iter=False,
-    limited=0,
-):
-
-    User_U = np.load(args.label_src)
-    User_L = np.load(args.label_tgt)
-    Emb_U_ = np.load(args.emb_src)
-    Emb_L_ = np.load(args.emb_tgt)
-
-    # DO normalize
-    Emb_U = normalize(Emb_U_)
-    Emb_L = normalize(Emb_L_)
-
+def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
+    # DO LDA
     if args.lda:
-        # DO LDA
         Emb_U = LDA().fit_transform(Emb_U_, User_U)
         Emb_L = LDA().fit_transform(Emb_L_, User_L)
         print("Computed LDA", Emb_U.shape, Emb_L.shape)
+        return Emb_U, User_U, Emb_L, User_L
 
+    # DO PCA
     if args.pca:
         d = 30
         print("Computing PCA,", d, "dimensions")
@@ -260,25 +245,44 @@ def Wasserstein_Procrustes_Alignment(
             "total explained variance ratio :",
             np.sum(pca.explained_variance_ratio_),
         )
-        # END PCA
+        return Emb_U, User_U, Emb_L, User_L
 
-    idx = np.arange(min(len(User_L), len(User_U)))
-    corres = idx
-
-    if corres is None:
-        corres = np.arange(User_U)
-    if limited != 0:
-        User_U, Emb_U = User_U[:limited], Emb_U[:limited]
-        User_L, Emb_L = User_L[:limited], Emb_L[:limited]
-
+    # DO Kmeans
     if args.kmeans and args.kmeans_num_cluster == -1:
         if len(Emb_U) < len(Emb_L):
             Emb_L, User_L = KMeans_reshape(Emb_L, User_L, len(Emb_U))
         elif len(Emb_U) > len(Emb_L):
             Emb_U, User_U = KMeans_reshape(Emb_U, User_U, len(Emb_L))
+        return Emb_U, User_U, Emb_L, User_L
+
     if args.kmeans and args.kmeans_num_cluster != -1:
         Emb_L, User_L = KMeans_reshape(Emb_L, User_L, args.kmeans_num_cluster)
         Emb_U, User_U = KMeans_reshape(Emb_U, User_U, args.kmeans_num_cluster)
+        return Emb_U, User_U, Emb_L, User_L
+
+    return Emb_U_, User_U, Emb_L_, User_L
+
+
+def Wasserstein_Procrustes_Alignment(
+    args,
+    verbose=False,
+    last_iter=False,
+):
+
+    User_U = np.load(args.label_src)
+    User_L = np.load(args.label_tgt)
+    Emb_U_ = np.load(args.emb_src)
+    Emb_L_ = np.load(args.emb_tgt)
+
+    # DO normalize DEFAULT
+    Emb_U = normalize(Emb_U_)
+    Emb_L = normalize(Emb_L_)
+
+    # Overwrite normalize and apply frontend instead
+    Emb_U_, User_U, Emb_L_, User_L = frontend(args, Emb_U_, User_U, Emb_L_, User_L)
+
+    idx = np.arange(min(len(User_L), len(User_U)))
+    corres = idx
 
     ninit = min(len(User_U), 1000)
     if args.nmax != -1:
