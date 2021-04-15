@@ -26,6 +26,7 @@ def parse_arguments():
     parser.add_argument("--emb_tgt", type=str, help="Path to target embeddings")
     parser.add_argument("--label_src", type=str, help="Path to source labels")
     parser.add_argument("--label_tgt", type=str, help="Path to target labels")
+    parser.add_argument("--rotation", type=str, help="Path to WP rotation")
 
     parser.add_argument(
         "--seed", default=1111, type=int, help="Random number generator seed"
@@ -36,10 +37,13 @@ def parse_arguments():
     )
     parser.add_argument("--bsz", default=40, type=int, help="Initial batch size")
     parser.add_argument(
-        "--lda", action="store_true", help="apply LDA first otherwise normalize"
+        "--lda", action="store_true", help="apply LDA first and normalize"
     )
     parser.add_argument(
-        "--pca", action="store_true", help="apply PCA first otherwise normalize"
+        "--pca", action="store_true", help="apply PCA first and normalize"
+    )
+    parser.add_argument(
+        "--test", action="store_true", help="testing mode"
     )
     parser.add_argument(
         "--kmeans", action="store_true", help="apply KMeans first otherwise normalize"
@@ -88,7 +92,7 @@ def align(
     reg,
     verbose,
     last_iter,
-):
+    ):
     for epoch in range(1, nepoch + 1):
         for _it in (
             tqdm(range(1, niter + 1), desc="alignment n°" + str(epoch))
@@ -114,15 +118,15 @@ def align(
 
         if verbose:
             print(
-                "epoch: %d\t batchSize: %d\t niter: %d\t obj: %.3f\t distance: %.4f"
+                "epoch: %d\t batchSize: %d\t niter: %d\t Wass_dist: %.3f\t distance: %.4f"
                 % (
                     epoch,
-                    objective(X, Y, R),
                     bsz,
                     niter,
+                    objective(X, Y, R),
                     np.mean(
                         [
-                            np.linalg.norm(Y[i] - np.dot(Y[corres[i]], R))
+                            np.linalg.norm(X[i] - np.dot(Y[corres[i]], R))
                             for i in range(len(Y))
                         ]
                     ),
@@ -221,6 +225,7 @@ def KMeans_reshape(Emb, User, K):
     return nE, nU
 
 
+
 def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
     # DO LDA
     if args.lda:
@@ -272,7 +277,7 @@ def Wasserstein_Procrustes_Alignment(
     args,
     verbose=False,
     last_iter=False,
-):
+    ):
 
     User_U = np.load(args.label_src)
     User_L = np.load(args.label_tgt)
@@ -334,14 +339,35 @@ def Wasserstein_Procrustes_Alignment(
 
     return Stiefel_Manifold(R_final), acc1, accf
 
+    
 
 if __name__ == "__main__":
 
     args = parse_arguments()
-    WP_R, acc1, acc2 = Wasserstein_Procrustes_Alignment(
-        args,
-        verbose=True,
-    )
-    print("Accuracy :", acc1, acc2, "for args:", args)
+    if not args.test:
+        WP_R, acc1, acc2 = Wasserstein_Procrustes_Alignment(
+            args,
+            verbose=True,
+        )
+        print("Accuracy :", acc1, acc2, "for args:", args)
+        np.save(args.rotation, WP_R)
 
-    #  Emb_L = np.dot(Emb_L, WP_R)
+    else:
+        User_A = np.load(args.label_src)
+        User_B = np.load(args.label_tgt)
+        Emb_A_ = np.load(args.emb_src)
+        Emb_B_ = np.load(args.emb_tgt)
+        WP_R = np.load(args.rotation)
+
+        Emb_A = normalize(Emb_A_)
+        Emb_B = normalize(Emb_B_)
+        Xn, Yn = Emb_A, np.dot(Emb_B, WP_R)
+        Ux, Uy = User_A, User_B
+        compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        n_emb = len(Xn)
+        L = np.zeros(n_emb).astype(int)
+        for i in range(n_emb):
+            distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
+            L[i] = np.argmin(distances)
+        acc_U, acc_F = np.sum(Uy[L]==Ux), np.sum(L==np.arange(len(L)))
+        print(acc_U/len(Uy), acc_F/len(Ux))
