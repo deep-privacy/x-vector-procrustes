@@ -92,7 +92,7 @@ if [ $stage -le 1 ]; then
     --label_src $expe_dir/User_U.npy \
     --emb_tgt $expe_dir/Emb_L.npy \
     --label_tgt $expe_dir/User_L.npy \
-    --rotation $expe_dir/WP_R.npy
+    --rotation exp/WP_R.npy
 
   printf "${GREEN}Done${NC}\n"
 fi
@@ -120,7 +120,7 @@ if [ $stage -le 2 ]; then
       --label_src $expe_dir/User_U.npy \
       --emb_tgt $expe_dir/Emb_L.npy \
       --label_tgt $expe_dir/User_L.npy \
-      --rotation $expe_dir/WP_R.npy \
+      --rotation exp/WP_R.npy \
       --test
 
   done
