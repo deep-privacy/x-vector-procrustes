@@ -17,6 +17,41 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description="Wasserstein Procrustes for Embedding Alignment"
+    )
+    parser.add_argument("--emb_src", type=str, help="Path to source word embeddings")
+    parser.add_argument("--emb_tgt", type=str, help="Path to target word embeddings")
+    parser.add_argument("--label_src", type=str, help="Path to source word embeddings")
+    parser.add_argument("--label_tgt", type=str, help="Path to target word embeddings")
+
+    parser.add_argument(
+        "--seed", default=1111, type=int, help="Random number generator seed"
+    )
+    parser.add_argument("--nepoch", default=15, type=int, help="Number of epochs")
+    parser.add_argument(
+        "--niter", default=1024, type=int, help="Initial number of iterations"
+    )
+    parser.add_argument("--bsz", default=50, type=int, help="Initial batch size")
+    parser.add_argument("--kmeans", action="store_true", help="apply kmeans first")
+    parser.add_argument(
+        "--kmeans_num_cluster", default=-1, type=int, help="Number of cluster"
+    )
+    parser.add_argument("--lr", default=10, type=float, help="Learning rate")
+    parser.add_argument(
+        "--nmax",
+        default=-1,
+        type=int,
+        help="Max number of alignment points used",
+    )
+    parser.add_argument(
+        "--reg", default=0.05, type=float, help="Regularization parameter for sinkhorn"
+    )
+    args = parser.parse_args()
+    return args
+
+
 def objective(X, Y, R, n=1000):
     if n > len(X):
         n = len(X)
@@ -179,75 +214,68 @@ def KMeans_reshape(Emb, User, K):
 
 
 def Wasserstein_Procrustes_Alignment(
-    User_U,
-    Emb_U,
-    User_L,
-    Emb_L,
-    corres=None,
+    args,
     verbose=False,
     last_iter=False,
     limited=0,
-    K=0,
-    niter=4096,
-    bsz=50,
-    lr=100,
-    nepoch=15,
 ):
+
+    User_U = np.load("exp/enroll_train_uv/User_U.npy")
+    User_L = np.load("exp/enroll_train_uv/User_L.npy")
+    Emb_U_ = np.load("exp/enroll_train_uv/Emb_U.npy")
+    Emb_L_ = np.load("exp/enroll_train_uv/Emb_L.npy")
+
+    # DO normalize
+    Emb_U = normalize(Emb_U_)
+    Emb_L = normalize(Emb_L_)
+
+    # DO LDA
+    Emb_U = LDA().fit_transform(Emb_U_, User_U)
+    Emb_L = LDA().fit_transform(Emb_L_, User_L)
+    print("Computed LDA", Emb_U.shape, Emb_L.shape)
+
+    # DO PCA
+    d = 30
+    print("Computing PCA,", d, "dimensions")
+    pca = PCA(n_components=d).fit(Emb_U_)
+    Emb_U = pca.transform(Emb_U_)
+    print(
+        Emb_U.shape,
+        "total explained variance ratio :",
+        np.sum(pca.explained_variance_ratio_),
+    )
+    pca = PCA(n_components=d).fit(Emb_L_)
+    Emb_L = pca.transform(Emb_L_)
+    print(
+        Emb_L.shape,
+        "total explained variance ratio :",
+        np.sum(pca.explained_variance_ratio_),
+    )
+    # END PCA
+
+    idx = np.arange(min(len(User_L), len(User_U)))
+    corres = idx
+
     if corres is None:
         corres = np.arange(User_U)
     if limited != 0:
         User_U, Emb_U = User_U[:limited], Emb_U[:limited]
         User_L, Emb_L = User_L[:limited], Emb_L[:limited]
-    if K == 0:
+
+    if args.kmeans and args.kmeans_num_cluster == -1:
         if len(Emb_U) < len(Emb_L):
             Emb_L, User_L = KMeans_reshape(Emb_L, User_L, len(Emb_U))
         elif len(Emb_U) > len(Emb_L):
             Emb_U, User_U = KMeans_reshape(Emb_U, User_U, len(Emb_L))
-    else:
-        Emb_L, User_L = KMeans_reshape(Emb_L, User_L, K)
-        Emb_U, User_U = KMeans_reshape(Emb_U, User_U, K)
+    if args.kmeans and args.kmeans_num_cluster != -1:
+        Emb_L, User_L = KMeans_reshape(Emb_L, User_L, args.kmeans_num_cluster)
+        Emb_U, User_U = KMeans_reshape(Emb_U, User_U, args.kmeans_num_cluster)
 
     ninit = min(len(User_U), 1000)
-    N_pts_used = min(len(Emb_L), len(Emb_U))
-    if verbose:
-        print("Parameters :", nepoch, niter, bsz, lr, ninit, N_pts_used)
-    parser = argparse.ArgumentParser(
-        description="Wasserstein Procrustes for Embedding Alignment"
-    )
-    parser.add_argument("--model_src", type=str, help="Path to source word embeddings")
-    parser.add_argument("--model_tgt", type=str, help="Path to target word embeddings")
-    parser.add_argument("--lexicon", type=str, help="Path to the evaluation lexicon")
-    parser.add_argument(
-        "--output_src",
-        default="",
-        type=str,
-        help="Path to save the aligned source embeddings",
-    )
-    parser.add_argument(
-        "--output_tgt",
-        default="",
-        type=str,
-        help="Path to save the aligned target embeddings",
-    )
-    parser.add_argument(
-        "--seed", default=1111, type=int, help="Random number generator seed"
-    )
-    parser.add_argument("--nepoch", default=nepoch, type=int, help="Number of epochs")
-    parser.add_argument(
-        "--niter", default=niter, type=int, help="Initial number of iterations"
-    )
-    parser.add_argument("--bsz", default=bsz, type=int, help="Initial batch size")
-    parser.add_argument("--lr", default=lr, type=float, help="Learning rate")
-    parser.add_argument(
-        "--nmax",
-        default=N_pts_used,
-        type=int,
-        help="Vocabulary size for learning the alignment",
-    )
-    parser.add_argument(
-        "--reg", default=0.05, type=float, help="Regularization parameter for sinkhorn"
-    )
-    args = parser.parse_args()
+    if args.nmax != -1:
+        N_pts_used = args.nmax
+    else:
+        N_pts_used = min(len(Emb_L), len(Emb_U))
 
     np.random.seed(args.seed)
 
@@ -290,71 +318,6 @@ def Wasserstein_Procrustes_Alignment(
 
 
 if __name__ == "__main__":
-    generate = False
-    if generate:
-        dim = 5
-        num_seq_by_user = 100
-        n_users = 10
-        num_seq = num_seq_by_user * n_users
-        shuffle = True
-        # U embeddings
-        Centers_U = normalize(np.random.random((n_users, dim)), axis=1)
-        Users_U = np.repeat(np.arange(n_users), num_seq_by_user, axis=0)
-        Emb_U = np.array(
-            [np.random.normal(Centers_U[Users_U[i]], 0.05) for i in range(num_seq)]
-        )
-        # Rotation
-        idx = np.arange(dim)
-        np.random.shuffle(idx)
-        R = np.array(
-            [[1 if idx[i] == j else 0 for i in range(dim)] for j in range(dim)]
-        )
-        # R = np.eye(dim)
-        # L embeddings
-        Emb_L = np.dot(Emb_U, R)
-        User_U = np.arange(num_seq) // (num_seq / n_users)
-        if shuffle:
-            idx = np.arange(num_seq)
-            np.random.shuffle(idx)
-            Emb_L, User_L = Emb_L[idx, :], User_U[idx]
-        else:
-            User_L = User_U
-    else:
-        User_U = np.load("numpy_arrays/User_U.npy")
-        User_L = np.load("numpy_arrays/User_L.npy")
-        Emb_U_ = np.load("numpy_arrays/Emb_U.npy")
-        Emb_L_ = np.load("numpy_arrays/Emb_L.npy")
-
-        idx = np.arange(min(len(User_L), len(User_U)))
-    print(User_U.shape, Emb_U_.shape, User_L.shape, Emb_L_.shape)
-
-    if False:
-        # DO PCA
-        d = 30
-        print("Computing PCA,", d, "dimensions")
-        pca = PCA(n_components=d).fit(Emb_U_)
-        Emb_U = pca.transform(Emb_U_)
-        print(
-            Emb_U.shape,
-            "total explained variance ratio :",
-            np.sum(pca.explained_variance_ratio_),
-        )
-        pca = PCA(n_components=d).fit(Emb_L_)
-        Emb_L = pca.transform(Emb_L_)
-        print(
-            Emb_L.shape,
-            "total explained variance ratio :",
-            np.sum(pca.explained_variance_ratio_),
-        )
-
-    else:
-        # DO LDA
-        Emb_U = LDA().fit_transform(Emb_U_, User_U)
-        Emb_L = LDA().fit_transform(Emb_L_, User_L)
-        print("Computed LDA", Emb_U.shape, Emb_L.shape)
-
-    Emb_U = normalize(Emb_U_)
-    Emb_L = normalize(Emb_L_)
 
     for niter in [1024]:
         for lr in [50]:
@@ -366,7 +329,6 @@ if __name__ == "__main__":
                     Emb_U,
                     User_L,
                     Emb_L,
-                    corres=idx,
                     verbose=False,
                     niter=niter,
                     lr=lr,

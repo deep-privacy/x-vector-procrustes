@@ -6,14 +6,7 @@ set -e
 
 stage=0
 fix_scp=false
-show_vpc_scores=false
-
-anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
-
-original_dset=xvect_libri_test_enrolls_anon
-# ONE OF: xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls
-
-anon_dset=xvect_libri_test_enrolls
+show_vpc_scores=true
 
 #=====  end config  =======
 . utils/parse_options.sh || exit 1;
@@ -46,7 +39,7 @@ if [ $stage -le -1 ]; then
       for original_dset in xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls; do
         original_dset=${original_dset}${suffix}
         printf "  $original_dset\n"
-        python ./align.py \
+        python ./prep_dset.py \
            ./data/$anon_exp_parameter/$original_dset/xvector.scp \
            ./data/$anon_exp_parameter/$anon_dset/xvector.scp --test > /dev/null
       done
@@ -57,26 +50,37 @@ if [ $stage -le -1 ]; then
 fi
 
 if [ $stage -le 0 ]; then
-  printf "$original_dset\n"
-  printf "$anon_dset\n"
+  anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
+
+  anon_dset=xvect_libri_test_enrolls_anon
+  original_dset=xvect_libri_test_enrolls
+  # ONE OF: xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls
 
   if $show_vpc_scores; then
     printf "${RED}Spk verif scores:${NC}\n"
-    cat ./data/$anon_exp_parameter/results/results.txt | grep ".*$(echo $original_dset | sed -e 's/xvect_//').*" -A 3
+    cat ./data/$anon_exp_parameter/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
     printf "${RED}with retrained x-vector:${NC}\n"
-    cat ./data/${anon_exp_parameter}_retrained_xtractor/results/results.txt | grep ".*$(echo $original_dset | sed -e 's/xvect_//').*" -A 3
+    cat ./data/${anon_exp_parameter}_retrained_xtractor/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
     printf "${RED}---${NC}\n"
   fi
-  echo ./data/$anon_exp_parameter/$anon_dset/xvector.scp
-  echo ./data/${anon_exp_parameter}_retrained_xtractor/$original_dset/xvector.scp
 
-  mkdir -p numpy_arrays
-  python ./align.py \
-     ./data/$anon_exp_parameter/$anon_dset/xvector.scp \
-     ./data/${anon_exp_parameter}_retrained_xtractor/$original_dset/xvector.scp \
+  printf "${GREEN}   DATA prep:\n     - $original_dset \n     - $anon_dset\n == Data used to train procrustes uv ==${NC}\n"
+
+  expe_dir=exp/enroll_train_uv
+  mkdir -p $expe_dir
+
+  python ./prep_dset.py \
+     ./data/$anon_exp_parameter/$original_dset/xvector.scp \
+     ./data/${anon_exp_parameter}_retrained_xtractor/$anon_dset/xvector.scp \
+     "$expe_dir/Emb_U" "$expe_dir/User_U" \
+     "$expe_dir/Emb_L" "$expe_dir/User_L" \
      --filter_scp_trials_enrolls
+
+  printf "${GREEN}Done${NC}\n"
 fi
 
 if [ $stage -le 1 ]; then
-  python ./Wasserstein_Procrustes.py
+  printf "${GREEN}== Training procrustes uv ==${NC}\n"
+  python ./Wasserstein_Procrustes.py \
+    --emb_src exp/enroll_train_uv/Emb_U.npy
 fi
