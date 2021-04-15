@@ -33,12 +33,20 @@ def parse_arguments():
     parser.add_argument(
         "--niter", default=1024, type=int, help="Initial number of iterations"
     )
-    parser.add_argument("--bsz", default=50, type=int, help="Initial batch size")
-    parser.add_argument("--kmeans", action="store_true", help="apply kmeans first")
+    parser.add_argument("--bsz", default=40, type=int, help="Initial batch size")
     parser.add_argument(
-        "--kmeans_num_cluster", default=-1, type=int, help="Number of cluster"
+        "--lda", action="store_true", help="apply LDA first otherwise normalize"
     )
-    parser.add_argument("--lr", default=10, type=float, help="Learning rate")
+    parser.add_argument(
+        "--pca", action="store_true", help="apply PCA first otherwise normalize"
+    )
+    parser.add_argument(
+        "--kmeans", action="store_true", help="apply KMeans first otherwise normalize"
+    )
+    parser.add_argument(
+        "--kmeans_num_cluster", default=-1, type=int, help="Number of KMeans cluster"
+    )
+    parser.add_argument("--lr", default=50, type=float, help="Learning rate")
     parser.add_argument(
         "--nmax",
         default=-1,
@@ -70,15 +78,15 @@ def align(
     X,
     Y,
     R,
-    lr=10.0,
-    bsz=200,
-    nepoch=5,
-    niter=1000,
-    corres=None,
-    nmax=10000,
-    reg=0.05,
-    verbose=True,
-    last_iter=False,
+    lr,
+    bsz,
+    nepoch,
+    niter,
+    corres,
+    nmax,
+    reg,
+    verbose,
+    last_iter,
 ):
     t0 = time.time()
 
@@ -116,8 +124,8 @@ def align(
             print(
                 np.mean(
                     [
-                        np.linalg.norm(Emb_L[i] - np.dot(Emb_U[corres[i]], R))
-                        for i in range(len(Emb_U))
+                        np.linalg.norm(Y[i] - np.dot(Y[corres[i]], R))
+                        for i in range(len(Y))
                     ]
                 )
             )
@@ -220,38 +228,39 @@ def Wasserstein_Procrustes_Alignment(
     limited=0,
 ):
 
-    User_U = np.load("exp/enroll_train_uv/User_U.npy")
-    User_L = np.load("exp/enroll_train_uv/User_L.npy")
-    Emb_U_ = np.load("exp/enroll_train_uv/Emb_U.npy")
-    Emb_L_ = np.load("exp/enroll_train_uv/Emb_L.npy")
+    User_U = np.load(args.label_src)
+    User_L = np.load(args.label_tgt)
+    Emb_U_ = np.load(args.emb_src)
+    Emb_L_ = np.load(args.emb_tgt)
 
     # DO normalize
     Emb_U = normalize(Emb_U_)
     Emb_L = normalize(Emb_L_)
 
-    # DO LDA
-    Emb_U = LDA().fit_transform(Emb_U_, User_U)
-    Emb_L = LDA().fit_transform(Emb_L_, User_L)
-    print("Computed LDA", Emb_U.shape, Emb_L.shape)
+    if args.lda:
+        # DO LDA
+        Emb_U = LDA().fit_transform(Emb_U_, User_U)
+        Emb_L = LDA().fit_transform(Emb_L_, User_L)
+        print("Computed LDA", Emb_U.shape, Emb_L.shape)
 
-    # DO PCA
-    d = 30
-    print("Computing PCA,", d, "dimensions")
-    pca = PCA(n_components=d).fit(Emb_U_)
-    Emb_U = pca.transform(Emb_U_)
-    print(
-        Emb_U.shape,
-        "total explained variance ratio :",
-        np.sum(pca.explained_variance_ratio_),
-    )
-    pca = PCA(n_components=d).fit(Emb_L_)
-    Emb_L = pca.transform(Emb_L_)
-    print(
-        Emb_L.shape,
-        "total explained variance ratio :",
-        np.sum(pca.explained_variance_ratio_),
-    )
-    # END PCA
+    if args.pca:
+        d = 30
+        print("Computing PCA,", d, "dimensions")
+        pca = PCA(n_components=d).fit(Emb_U_)
+        Emb_U = pca.transform(Emb_U_)
+        print(
+            Emb_U.shape,
+            "total explained variance ratio :",
+            np.sum(pca.explained_variance_ratio_),
+        )
+        pca = PCA(n_components=d).fit(Emb_L_)
+        Emb_L = pca.transform(Emb_L_)
+        print(
+            Emb_L.shape,
+            "total explained variance ratio :",
+            np.sum(pca.explained_variance_ratio_),
+        )
+        # END PCA
 
     idx = np.arange(min(len(User_L), len(User_U)))
     corres = idx
@@ -287,7 +296,7 @@ def Wasserstein_Procrustes_Alignment(
         reg=args.reg,
         apply_sqrt=True,
     )
-    # print(np.mean([np.linalg.norm(Emb_L[i] - np.dot(Emb_U[corres[i]],R0)) for i in range(len(Emb_U))]))
+
     R = align(
         x_src,
         x_tgt,
@@ -298,7 +307,7 @@ def Wasserstein_Procrustes_Alignment(
         corres=corres,
         nepoch=args.nepoch,
         reg=args.reg,
-        nmax=args.nmax,
+        nmax=N_pts_used,
         verbose=verbose,
         last_iter=last_iter,
     )
@@ -313,28 +322,17 @@ def Wasserstein_Procrustes_Alignment(
         )
 
     R_final = procrustes(x_src[:N_pts_used], (x_tgt[:N_pts_used])[L]).T
-    # return acc1, accf
+
     return Stiefel_Manifold(R_final), acc1, accf
 
 
 if __name__ == "__main__":
 
-    for niter in [1024]:
-        for lr in [50]:
-            for bsz in [40]:
+    args = parse_arguments()
+    WP_R, acc1, acc2 = Wasserstein_Procrustes_Alignment(
+        args,
+        verbose=True,
+    )
+    print("Accuracy :", acc1, acc2, "for args:", args)
 
-                print("niter :", niter, "lr :", lr, "bsz :", bsz)
-                WP_R, acc1, acc2 = Wasserstein_Procrustes_Alignment(
-                    User_U,
-                    Emb_U,
-                    User_L,
-                    Emb_L,
-                    verbose=False,
-                    niter=niter,
-                    lr=lr,
-                    bsz=bsz,
-                )
-                print("Accuracy :", acc1, acc2)
-        # print(acc1)
-
-    Emb_L = np.dot(Emb_L, WP_R)
+    #  Emb_L = np.dot(Emb_L, WP_R)

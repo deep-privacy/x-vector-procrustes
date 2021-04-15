@@ -82,5 +82,8 @@ fi
 if [ $stage -le 1 ]; then
   printf "${GREEN}== Training procrustes uv ==${NC}\n"
   python ./Wasserstein_Procrustes.py \
-    --emb_src exp/enroll_train_uv/Emb_U.npy
+    --emb_src exp/enroll_train_uv/Emb_U.npy \
+    --label_src exp/enroll_train_uv/User_U.npy \
+    --emb_tgt exp/enroll_train_uv/Emb_L.npy \
+    --label_tgt exp/enroll_train_uv/User_L.npy
 fi
