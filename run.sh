@@ -92,10 +92,10 @@ if [ $stage -le 1 ]; then
     --label_src $expe_dir/User_U.npy \
     --emb_tgt $expe_dir/Emb_L.npy \
     --label_tgt $expe_dir/User_L.npy \
-    --rotation exp/WP_R.npy
+    --rotation exp/WP_R.npy \
+    --pca
 
   printf "${GREEN}Done${NC}\n"
-  exit 0
 fi
 
 if [ $stage -le 2 ]; then
@@ -122,6 +122,7 @@ if [ $stage -le 2 ]; then
       --emb_tgt $expe_dir/Emb_L.npy \
       --label_tgt $expe_dir/User_L.npy \
       --rotation exp/WP_R.npy \
+      --pca --pca_load_path "exp/enroll_train_wp" \
       --test
 
   done

@@ -11,6 +11,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from tqdm import tqdm
 import argparse
 import os
+import sys
 import pickle as pk
 
 import warnings
@@ -42,6 +43,7 @@ def parse_arguments():
     parser.add_argument(
         "--pca", action="store_true", help="apply PCA first and normalize"
     )
+    parser.add_argument("--pca_load_path", type=str, help="PCA pickle")
     parser.add_argument(
         "--test", action="store_true", help="testing mode"
     )
@@ -225,8 +227,19 @@ def KMeans_reshape(Emb, User, K):
     return nE, nU
 
 
-
 def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
+    if args.test:
+        if args.pca:
+            print("Loading pca from:", args.pca_load_path)
+            pca_reload_u = pk.load(open(args.pca_load_path + "/pca_emb_l.pkl", "rb"))
+            Emb_U = pca_reload_u.transform(Emb_U_)
+
+            pca_reload_l = pk.load(open(args.pca_load_path + "/pca_emb_u.pkl", "rb"))
+            Emb_L = pca_reload_l.transform(Emb_L_)
+            return Emb_U, User_U, Emb_L, User_L
+        print("WARNING not implemented!!!!")
+        sys.exit(1)
+
     # DO LDA
     if args.lda:
         Emb_U = LDA().fit_transform(Emb_U_, User_U)
@@ -359,8 +372,13 @@ if __name__ == "__main__":
         Emb_B_ = np.load(args.emb_tgt)
         WP_R = np.load(args.rotation)
 
-        Emb_A = normalize(Emb_A_)
-        Emb_B = normalize(Emb_B_)
+        # Apply frontend if asked
+        Emb_A, User_A, Emb_B, User_B = frontend(args, Emb_A_, User_A, Emb_B_, User_B)
+
+        # Normalize DEFAULT
+        Emb_A = normalize(Emb_A)
+        Emb_B = normalize(Emb_B)
+
         Xn, Yn = Emb_A, np.dot(Emb_B, WP_R)
         Ux, Uy = User_A, User_B
         compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
