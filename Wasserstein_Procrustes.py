@@ -10,6 +10,8 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 from tqdm import tqdm
 import argparse
+import os
+import pickle as pk
 
 import warnings
 
@@ -229,9 +231,11 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
 
     # DO PCA
     if args.pca:
-        d = 30
+        d = 10
+        expdir = os.path.dirname(args.emb_src)
         print("Computing PCA,", d, "dimensions")
         pca = PCA(n_components=d).fit(Emb_U_)
+        pk.dump(pca, open(expdir + "/pca_emb_u.pkl", "wb"))
         Emb_U = pca.transform(Emb_U_)
         print(
             Emb_U.shape,
@@ -239,6 +243,7 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
             np.sum(pca.explained_variance_ratio_),
         )
         pca = PCA(n_components=d).fit(Emb_L_)
+        pk.dump(pca, open(expdir + "/pca_emb_l.pkl", "wb"))
         Emb_L = pca.transform(Emb_L_)
         print(
             Emb_L.shape,
@@ -274,12 +279,12 @@ def Wasserstein_Procrustes_Alignment(
     Emb_U_ = np.load(args.emb_src)
     Emb_L_ = np.load(args.emb_tgt)
 
-    # DO normalize DEFAULT
-    Emb_U = normalize(Emb_U_)
-    Emb_L = normalize(Emb_L_)
+    # Apply frontend if asked
+    Emb_U, User_U, Emb_L, User_L = frontend(args, Emb_U_, User_U, Emb_L_, User_L)
 
-    # Overwrite normalize and apply frontend instead
-    Emb_U_, User_U, Emb_L_, User_L = frontend(args, Emb_U_, User_U, Emb_L_, User_L)
+    # Normalize DEFAULT
+    Emb_U = normalize(Emb_U)
+    Emb_L = normalize(Emb_L)
 
     idx = np.arange(min(len(User_L), len(User_U)))
     corres = idx

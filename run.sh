@@ -94,6 +94,7 @@ if [ $stage -le 1 ]; then
     --label_tgt $expe_dir/User_L.npy
 
   printf "${GREEN}Done${NC}\n"
+  exit 0
 fi
 
 if [ $stage -le 2 ]; then
