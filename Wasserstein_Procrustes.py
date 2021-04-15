@@ -3,10 +3,6 @@ import codecs, sys, time, math, argparse, ot
 import numpy as np
 
 import torch
-from torch.utils.data import Dataset, DataLoader
-import itertools
-import torch.nn as nn
-import torch.optim as optim
 
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
@@ -129,7 +125,7 @@ def KMeans_reshape(Emb, User, K):
     return nE, nU
 
 def Wasserstein_Procrustes_Alignment(User_U, Emb_U, User_L, Emb_L, corres=None, verbose = False, last_iter=False, limited = 0, K = 0,
-        niter=4096,
+        niter=1024,
         bsz=50,
         lr=100,
         nepoch=15):
@@ -255,7 +251,33 @@ if __name__=="__main__":
                 print("Accuracy :", acc1, acc2)
         #print(acc1)
 
+    Xn, Yn = np.dot(Emb_U, WP_R), Emb_L
+    Ux, Uy = User_U, User_L
+    compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    n_emb = len(Xn)
+    L = np.zeros(n_emb).astype(int)
+    for i in range(n_emb):
+        distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
+        L[i] = np.argmin(distances)
+    acc_U, acc_F = np.sum(Uy[L]==Ux), np.sum(L==np.arange(len(L)))
+    print(acc_U/len(Uy), acc_F/len(Ux))
 
 
-    Emb_L = np.dot(Emb_L,WP_R)
+    User_A = np.load("numpy_arrays/User_A.npy")
+    User_B = np.load("numpy_arrays/User_B.npy")
+    Emb_A_ = np.load("numpy_arrays/Emb_A.npy")
+    Emb_B_ = np.load("numpy_arrays/Emb_B.npy")
+    Emb_A = normalize(Emb_A_)
+    Emb_B = normalize(Emb_B_)
+    Xn, Yn = Emb_A, np.dot(Emb_B, WP_R)
+    Ux, Uy = User_A, User_B
+    compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    n_emb = len(Xn)
+    L = np.zeros(n_emb).astype(int)
+    for i in range(n_emb):
+        distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
+        L[i] = np.argmin(distances)
+    acc_U, acc_F = np.sum(Uy[L]==Ux), np.sum(L==np.arange(len(L)))
+    print(acc_U/len(Uy), acc_F/len(Ux))
+
 

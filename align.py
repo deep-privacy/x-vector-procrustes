@@ -84,7 +84,7 @@ for u in set(User_trials):
     ax2.scatter(new_Emb_trials[User_trials==u,0], new_Emb_trials[User_trials==u,1])
 plt.show()
 
-np.save("numpy_arrays/Emb_U",Emb_enroll)
-np.save("numpy_arrays/Emb_L",Emb_trials)
-np.save("numpy_arrays/User_U",User_enroll)
-np.save("numpy_arrays/User_L",User_trials)
+np.save("numpy_arrays/Emb_A",Emb_enroll)
+np.save("numpy_arrays/Emb_B",Emb_trials)
+np.save("numpy_arrays/User_A",User_enroll)
+np.save("numpy_arrays/User_B",User_trials)

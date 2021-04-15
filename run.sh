@@ -10,10 +10,10 @@ show_vpc_scores=false
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
-original_dset=xvect_libri_test_enrolls_anon
+original_dset=xvect_libri_test_trials_m
 # ONE OF: xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls
 
-anon_dset=xvect_libri_test_enrolls
+anon_dset=xvect_libri_test_trials_m_anon
 
 #=====  end config  =======
 . utils/parse_options.sh || exit 1;
