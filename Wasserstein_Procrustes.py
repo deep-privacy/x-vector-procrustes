@@ -387,5 +387,10 @@ if __name__ == "__main__":
         for i in range(n_emb):
             distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
             L[i] = np.argmin(distances)
-        acc_U, acc_F = np.sum(Uy[L]==Ux), np.sum(L==np.arange(len(L)))
-        print(acc_U/len(Uy), acc_F/len(Ux))
+        acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
+        acc1 = acc_U / len(Uy)
+        accf = acc_F / len(Ux)
+        print(
+            "\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf)
+        )
+

@@ -104,7 +104,7 @@ if [ $stage -le 2 ]; then
   expe_dir=exp/trials_test
   mkdir -p $expe_dir
 
-  for dset in trials_f trials_m; do
+  for dset in enrolls trials_f trials_m; do
 
     original_dset=xvect_libri_test_${dset}
     anon_dset=xvect_libri_test_${dset}_anon
@@ -114,13 +114,14 @@ if [ $stage -le 2 ]; then
        ./data/${anon_exp_parameter}_retrained_xtractor/$anon_dset/xvector.scp \
        "$expe_dir/Emb_U" "$expe_dir/User_U" \
        "$expe_dir/Emb_L" "$expe_dir/User_L" \
-       --filter_scp_trials_enrolls
+       --filter_scp_trials_enrolls \
+       --noplot
 
     python ./Wasserstein_Procrustes.py \
-      --emb_src $expe_dir/Emb_U.npy \
-      --label_src $expe_dir/User_U.npy \
-      --emb_tgt $expe_dir/Emb_L.npy \
-      --label_tgt $expe_dir/User_L.npy \
+      --emb_tgt $expe_dir/Emb_U.npy \
+      --label_tgt $expe_dir/User_U.npy \
+      --emb_src $expe_dir/Emb_L.npy \
+      --label_src $expe_dir/User_L.npy \
       --rotation exp/WP_R.npy \
       --pca --pca_load_path "exp/enroll_train_wp" \
       --test
