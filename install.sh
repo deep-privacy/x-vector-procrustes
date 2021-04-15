@@ -7,6 +7,7 @@ nj=$(nproc)
 home=$PWD
 
 conda_url=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+conda_url=https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh
 venv_dir=$PWD/venv
 
 mark=.done-venv
@@ -32,6 +33,10 @@ source $venv_dir/bin/activate
 mark=.done-python
 if [ ! -f $mark ]; then
   pip install kaldiio==2.17.2
+  pip install scikit-learn==0.24.1
+  pip install matplotlib==3.4.1
+  pip install pot==0.7.0
+  pip install torch==1.7.1
   cd $home
   touch $mark
 fi

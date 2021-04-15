@@ -215,10 +215,10 @@ if __name__=="__main__":
             Emb_L, User_L = Emb_L[idx,:], User_U[idx]
         else: User_L = User_U
     else:
-        User_U = np.load("x-vector-procrustes-master/numpy_arrays/User_U.npy")
-        User_L = np.load("x-vector-procrustes-master/numpy_arrays/User_L.npy")
-        Emb_U_  = np.load("x-vector-procrustes-master/numpy_arrays/Emb_U.npy")
-        Emb_L_  = normalize(np.load("x-vector-procrustes-master/numpy_arrays/Emb_L.npy")) 
+        User_U = np.load("numpy_arrays/User_U.npy")
+        User_L = np.load("numpy_arrays/User_L.npy")
+        Emb_U_ = np.load("numpy_arrays/Emb_U.npy")
+        Emb_L_ = np.load("numpy_arrays/Emb_L.npy")
 
         idx=np.arange(min(len(User_L), len(User_U)))
     print(User_U.shape, Emb_U_.shape, User_L.shape, Emb_L_.shape)

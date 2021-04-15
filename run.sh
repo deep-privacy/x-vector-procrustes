@@ -6,14 +6,14 @@ set -e
 
 stage=0
 fix_scp=false
-show_vpc_scores=true
+show_vpc_scores=false
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
-original_dset=xvect_libri_test_enrolls
+original_dset=xvect_libri_test_enrolls_anon
 # ONE OF: xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls
 
-anon_dset=xvect_libri_test_enrolls_anon
+anon_dset=xvect_libri_test_enrolls
 
 #=====  end config  =======
 . utils/parse_options.sh || exit 1;
@@ -62,14 +62,21 @@ if [ $stage -le 0 ]; then
 
   if $show_vpc_scores; then
     printf "${RED}Spk verif scores:${NC}\n"
-    cat ./data/$anon_exp_parameter/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
+    cat ./data/$anon_exp_parameter/results/results.txt | grep ".*$(echo $original_dset | sed -e 's/xvect_//').*" -A 3
     printf "${RED}with retrained x-vector:${NC}\n"
-    cat ./data/${anon_exp_parameter}_retrained_xtractor/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
+    cat ./data/${anon_exp_parameter}_retrained_xtractor/results/results.txt | grep ".*$(echo $original_dset | sed -e 's/xvect_//').*" -A 3
     printf "${RED}---${NC}\n"
   fi
+  echo ./data/$anon_exp_parameter/$anon_dset/xvector.scp
+  echo ./data/${anon_exp_parameter}_retrained_xtractor/$original_dset/xvector.scp
 
+  mkdir -p numpy_arrays
   python ./align.py \
      ./data/$anon_exp_parameter/$anon_dset/xvector.scp \
      ./data/${anon_exp_parameter}_retrained_xtractor/$original_dset/xvector.scp \
      --filter_scp_trials_enrolls
+fi
+
+if [ $stage -le 1 ]; then
+  python ./Wasserstein_Procrustes.py
 fi
