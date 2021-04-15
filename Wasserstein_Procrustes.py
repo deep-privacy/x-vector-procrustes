@@ -43,6 +43,9 @@ def parse_arguments():
     parser.add_argument(
         "--pca", action="store_true", help="apply PCA first and normalize"
     )
+    parser.add_argument(
+        "--pca_n_dim", default=10, type=int, help="Number of components of the PCA"
+    )
     parser.add_argument("--pca_load_path", type=str, help="PCA pickle")
     parser.add_argument(
         "--test", action="store_true", help="testing mode"
@@ -179,7 +182,6 @@ def compute_nn_accuracy(X, Y, R, Ux, Uy):
 
     Xn, Yn = np.dot(X, R), np.dot(P, Y)
 
-    compute_unit = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     n_emb = len(Xn)
     L = np.zeros(n_emb).astype(int)
     for i in range(n_emb):
@@ -187,10 +189,9 @@ def compute_nn_accuracy(X, Y, R, Ux, Uy):
             torch.sum(
                 (
                     torch.FloatTensor(Xn[i])
-                    .to(compute_unit)
                     .unsqueeze(0)
                     .repeat(n_emb, 1)
-                    - torch.FloatTensor(Yn).to(compute_unit)
+                    - torch.FloatTensor(Yn)
                 )
                 ** 2,
                 dim=1,
@@ -249,7 +250,7 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
 
     # DO PCA
     if args.pca:
-        d = 10
+        d = args.pca_n_dim
         expdir = os.path.dirname(args.emb_src)
         print("Computing PCA,", d, "dimensions")
         pca = PCA(n_components=d).fit(Emb_U_)
@@ -350,9 +351,25 @@ def Wasserstein_Procrustes_Alignment(
 
     R_final = procrustes(x_src[:N_pts_used], (x_tgt[:N_pts_used])[L]).T
 
+    """ DEBUG """
+    WP_R = Stiefel_Manifold(R_final)
+    Xn, Yn = Emb_L, np.dot(Emb_U, WP_R)
+    Ux, Uy = User_L, User_U
+    n_emb = len(Xn)
+    L = np.zeros(n_emb).astype(int)
+    for i in range(n_emb):
+        distances = torch.sum((torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn))**2, dim=1).cpu().numpy()
+        L[i] = np.argmin(distances)
+    acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
+    acc1 = acc_U / len(Uy)
+    accf = acc_F / len(Ux)
+    print(
+        "\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf)
+    )
+    """ END DEBUG """
+
     return Stiefel_Manifold(R_final), acc1, accf
 
-    
 
 if __name__ == "__main__":
 
@@ -381,11 +398,10 @@ if __name__ == "__main__":
 
         Xn, Yn = Emb_A, np.dot(Emb_B, WP_R)
         Ux, Uy = User_A, User_B
-        compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         n_emb = len(Xn)
         L = np.zeros(n_emb).astype(int)
         for i in range(n_emb):
-            distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
+            distances = torch.sum((torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn))**2, dim=1).cpu().numpy()
             L[i] = np.argmin(distances)
         acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
         acc1 = acc_U / len(Uy)

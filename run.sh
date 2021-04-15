@@ -10,6 +10,10 @@ show_vpc_scores=true
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
+# Frontend params
+frontend_train="--pca --pca_n_dim 10"
+frontend_test="$frontend_train --pca_load_path exp/enroll_train_wp"
+
 #=====  end config  =======
 . utils/parse_options.sh || exit 1;
 . ./env.sh
@@ -93,7 +97,7 @@ if [ $stage -le 1 ]; then
     --emb_tgt $expe_dir/Emb_L.npy \
     --label_tgt $expe_dir/User_L.npy \
     --rotation exp/WP_R.npy \
-    --pca
+    $frontend_train
 
   printf "${GREEN}Done${NC}\n"
 fi
@@ -123,7 +127,7 @@ if [ $stage -le 2 ]; then
       --emb_src $expe_dir/Emb_L.npy \
       --label_src $expe_dir/User_L.npy \
       --rotation exp/WP_R.npy \
-      --pca --pca_load_path "exp/enroll_train_wp" \
+      $frontend_test \
       --test
 
   done
