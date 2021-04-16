@@ -47,9 +47,7 @@ def parse_arguments():
         "--pca_n_dim", default=10, type=int, help="Number of components of the PCA"
     )
     parser.add_argument("--pca_load_path", type=str, help="PCA pickle")
-    parser.add_argument(
-        "--test", action="store_true", help="testing mode"
-    )
+    parser.add_argument("--test", action="store_true", help="testing mode")
     parser.add_argument(
         "--kmeans", action="store_true", help="apply KMeans first otherwise normalize"
     )
@@ -97,7 +95,7 @@ def align(
     reg,
     verbose,
     last_iter,
-    ):
+):
     for epoch in range(1, nepoch + 1):
         for _it in (
             tqdm(range(1, niter + 1), desc="alignment n°" + str(epoch))
@@ -185,20 +183,14 @@ def compute_nn_accuracy(X, Y, R, Ux, Uy):
     n_emb = len(Xn)
     L = np.zeros(n_emb).astype(int)
     for i in range(n_emb):
-        distances = (
-            torch.sum(
-                (
-                    torch.FloatTensor(Xn[i])
-                    .unsqueeze(0)
-                    .repeat(n_emb, 1)
-                    - torch.FloatTensor(Yn)
-                )
-                ** 2,
-                dim=1,
+        distances = torch.sum(
+            (
+                torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb, 1)
+                - torch.FloatTensor(Yn)
             )
-            .cpu()
-            .numpy()
-        )
+            ** 2,
+            dim=1,
+        ).numpy()
         L[i] = np.argmin(distances)
     acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
 
@@ -238,8 +230,10 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
             pca_reload_l = pk.load(open(args.pca_load_path + "/pca_emb_u.pkl", "rb"))
             Emb_L = pca_reload_l.transform(Emb_L_)
             return Emb_U, User_U, Emb_L, User_L
-        print("WARNING not implemented!!!!")
-        sys.exit(1)
+
+        if args.lda or args.kmeans:
+            print("ERROR not implemented!!!!")
+            sys.exit(1)
 
     # DO LDA
     if args.lda:
@@ -291,7 +285,7 @@ def Wasserstein_Procrustes_Alignment(
     args,
     verbose=False,
     last_iter=False,
-    ):
+):
 
     User_U = np.load(args.label_src)
     User_L = np.load(args.label_tgt)
@@ -358,14 +352,23 @@ def Wasserstein_Procrustes_Alignment(
     n_emb = len(Xn)
     L = np.zeros(n_emb).astype(int)
     for i in range(n_emb):
-        distances = torch.sum((torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn))**2, dim=1).cpu().numpy()
+        distances = (
+            torch.sum(
+                (
+                    torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb, 1)
+                    - torch.FloatTensor(Yn)
+                )
+                ** 2,
+                dim=1,
+            )
+            .cpu()
+            .numpy()
+        )
         L[i] = np.argmin(distances)
     acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
     acc1 = acc_U / len(Uy)
     accf = acc_F / len(Ux)
-    print(
-        "\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf)
-    )
+    print("\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf))
     """ END DEBUG """
 
     return Stiefel_Manifold(R_final), acc1, accf
@@ -401,7 +404,14 @@ if __name__ == "__main__":
         n_emb = len(Xn)
         L = np.zeros(n_emb).astype(int)
         for i in range(n_emb):
-            distances = torch.sum((torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn))**2, dim=1).cpu().numpy()
+            distances = torch.sum(
+                (
+                    torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb, 1)
+                    - torch.FloatTensor(Yn)
+                )
+                ** 2,
+                dim=1,
+            ).numpy()
             L[i] = np.argmin(distances)
         acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
         acc1 = acc_U / len(Uy)
@@ -409,4 +419,3 @@ if __name__ == "__main__":
         print(
             "\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf)
         )
-
