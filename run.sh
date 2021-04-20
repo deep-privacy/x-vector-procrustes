@@ -11,12 +11,15 @@ show_vpc_scores=true
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
 # Frontend params
-frontend_train="--pca --pca_n_dim 10"
-frontend_test="$frontend_train --pca_load_path exp/enroll_train_wp"
+frontend_train="--pca --pca_n_dim 70"
+
+wass_procrustes_param="--niter 512 --bsz 8 --lr 10"  # Hyperparameter found with grid search
 
 #=====  end config  =======
 . utils/parse_options.sh || exit 1;
 . ./env.sh
+
+frontend_test="$frontend_train --pca_load_path exp/enroll_train_wp"
 
 if [ $stage -le -1 ]; then
   printf "${GREEN}Stage -1: testing x-vector loader${NC}\n"
@@ -97,9 +100,10 @@ if [ $stage -le 1 ]; then
     --emb_tgt $expe_dir/Emb_L.npy \
     --label_tgt $expe_dir/User_L.npy \
     --rotation exp/WP_R.npy \
-    $frontend_train
+    $frontend_train $wass_procrustes_param
 
   printf "${GREEN}Done${NC}\n"
+  # exit 0
 fi
 
 if [ $stage -le 2 ]; then

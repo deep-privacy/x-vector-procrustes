@@ -287,6 +287,8 @@ def Wasserstein_Procrustes_Alignment(
     last_iter=False,
 ):
 
+    np.random.seed(args.seed)
+
     User_U = np.load(args.label_src)
     User_L = np.load(args.label_tgt)
     Emb_U_ = np.load(args.emb_src)
@@ -307,8 +309,6 @@ def Wasserstein_Procrustes_Alignment(
         N_pts_used = args.nmax
     else:
         N_pts_used = min(len(Emb_L), len(Emb_U))
-
-    np.random.seed(args.seed)
 
     x_src = Emb_U
     x_tgt = Emb_L
