@@ -281,25 +281,14 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
     return Emb_U_, User_U, Emb_L_, User_L
 
 
+
 def Wasserstein_Procrustes_Alignment(
     args,
+    User_L,User_U,
+    Emb_L, Emb_U,
     verbose=False,
-    last_iter=False,
-):
-
-    np.random.seed(args.seed)
-
-    User_U = np.load(args.label_src)
-    User_L = np.load(args.label_tgt)
-    Emb_U_ = np.load(args.emb_src)
-    Emb_L_ = np.load(args.emb_tgt)
-
-    # Apply frontend if asked
-    Emb_U, User_U, Emb_L, User_L = frontend(args, Emb_U_, User_U, Emb_L_, User_L)
-
-    # Normalize DEFAULT
-    Emb_U = normalize(Emb_U)
-    Emb_L = normalize(Emb_L)
+    last_iter=False
+    ):
 
     idx = np.arange(min(len(User_L), len(User_U)))
     corres = idx
@@ -309,6 +298,8 @@ def Wasserstein_Procrustes_Alignment(
         N_pts_used = args.nmax
     else:
         N_pts_used = min(len(Emb_L), len(Emb_U))
+
+    np.random.seed(args.seed)
 
     x_src = Emb_U
     x_tgt = Emb_L
@@ -335,87 +326,65 @@ def Wasserstein_Procrustes_Alignment(
     )
 
     # comparison bewteen X.R et P.Y
-    acc1, accf, P, L = compute_nn_accuracy(
+    _, _, P, L = compute_nn_accuracy(
         x_src[corres], x_tgt, R, User_U[corres], User_L
     )
-    if verbose:
-        print(
-            "\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf)
-        )
 
     R_final = procrustes(x_src[:N_pts_used], (x_tgt[:N_pts_used])[L]).T
+    
+    return Stiefel_Manifold(R_final)
 
-    """ DEBUG """
-    WP_R = Stiefel_Manifold(R_final)
-    Xn, Yn = Emb_L, np.dot(Emb_U, WP_R)
-    Ux, Uy = User_L, User_U
+def top1(Xn, Yn, Ux, Uy):
+    compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     n_emb = len(Xn)
     L = np.zeros(n_emb).astype(int)
     for i in range(n_emb):
-        distances = (
-            torch.sum(
-                (
-                    torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb, 1)
-                    - torch.FloatTensor(Yn)
-                )
-                ** 2,
-                dim=1,
-            )
-            .cpu()
-            .numpy()
-        )
+        distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
         L[i] = np.argmin(distances)
-    acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
-    acc1 = acc_U / len(Uy)
-    accf = acc_F / len(Ux)
-    print("\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf))
-    """ END DEBUG """
+    return (100*np.sum(Uy[L]==Ux)/len(Ux), 100*np.sum(L==np.arange(len(L)))/len(Ux))
 
-    return Stiefel_Manifold(R_final), acc1, accf
-
+def topn(Xn, Yn, Ux, Uy, n=1):
+    compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    n_emb = len(Xn)
+    L = np.zeros((n_emb,n)).astype(int)
+    for i in range(n_emb):
+        distances = torch.sum((torch.FloatTensor(Xn[i]).to(compute_unit).unsqueeze(0).repeat(n_emb,1)-torch.FloatTensor(Yn).to(compute_unit))**2, dim=1).cpu().numpy()
+        L[i,:] = np.array([j[0] for j in sorted([(k,y) for k,y in enumerate(distances)], key = lambda x:x[1])])[:n]
+    user_stat = [1 if Ux[i] in Uy[L[i,:]] else 0 for i in range(len(Ux))]
+    seg_stat = [1 if i in L[i,:] else 0 for i in range(len(Ux))]
+    return (100*np.sum(user_stat)/len(Ux), 100*np.sum(seg_stat)/len(Ux))
 
 if __name__ == "__main__":
 
     args = parse_arguments()
+    User_U = np.load(args.label_src)
+    User_L = np.load(args.label_tgt)
+    Emb_U_ = np.load(args.emb_src)
+    Emb_L_ = np.load(args.emb_tgt)
+
+    # DO normalize DEFAULT
+    Emb_U = normalize(Emb_U_)
+    Emb_L = normalize(Emb_L_)
+
+    print("Data Loaded :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
+    Emb_U, User_U, Emb_L, User_L = frontend(args, Emb_U, User_U, Emb_L, User_L)
+    print("Frontend applied :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
+
     if not args.test:
-        WP_R, acc1, acc2 = Wasserstein_Procrustes_Alignment(
-            args,
-            verbose=True,
-        )
-        print("Accuracy :", acc1, acc2, "for args:", args)
+        """WP_R = Wasserstein_Procrustes_Alignment(
+            args, User_L, User_U, Emb_L, Emb_U,
+            verbose=True        )"""
+        
+        WP_R = procrustes(Emb_U, Emb_L)
+        print("Compute done :", WP_R.shape)
         np.save(args.rotation, WP_R)
 
     else:
-        User_A = np.load(args.label_src)
-        User_B = np.load(args.label_tgt)
-        Emb_A_ = np.load(args.emb_src)
-        Emb_B_ = np.load(args.emb_tgt)
         WP_R = np.load(args.rotation)
+        #WP_R = procrustes(Emb_U, Emb_L)
 
-        # Apply frontend if asked
-        Emb_A, User_A, Emb_B, User_B = frontend(args, Emb_A_, User_A, Emb_B_, User_B)
-
-        # Normalize DEFAULT
-        Emb_A = normalize(Emb_A)
-        Emb_B = normalize(Emb_B)
-
-        Xn, Yn = Emb_A, np.dot(Emb_B, WP_R)
-        Ux, Uy = User_A, User_B
-        n_emb = len(Xn)
-        L = np.zeros(n_emb).astype(int)
-        for i in range(n_emb):
-            distances = torch.sum(
-                (
-                    torch.FloatTensor(Xn[i]).unsqueeze(0).repeat(n_emb, 1)
-                    - torch.FloatTensor(Yn)
-                )
-                ** 2,
-                dim=1,
-            ).numpy()
-            L[i] = np.argmin(distances)
-        acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
-        acc1 = acc_U / len(Uy)
-        accf = acc_F / len(Ux)
-        print(
-            "\nPrecision Users : %.3f Same segments : %.3f\n" % (100 * acc1, 100 * accf)
-        )
+    acc_U, acc_F = top1(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L)
+    print("Top 1:", acc_U, acc_F)
+    for n in [3,5,7,10, 25, 50, 100, len(User_L)]:
+        acc_U, acc_F = topn(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L, n=n)
+        print("Top",n,":", acc_U, acc_F)

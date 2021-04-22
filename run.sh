@@ -84,7 +84,8 @@ if [ $stage -le 0 ]; then
      ./data/${anon_exp_parameter}_retrained_xtractor/$anon_dset/xvector.scp \
      "$expe_dir/Emb_U" "$expe_dir/User_U" \
      "$expe_dir/Emb_L" "$expe_dir/User_L" \
-     --filter_scp_trials_enrolls
+     --filter_scp_trials_enrolls \
+     --noplot
 
   printf "${GREEN}Done${NC}\n"
 fi
