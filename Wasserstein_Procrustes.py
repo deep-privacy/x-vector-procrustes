@@ -376,9 +376,9 @@ if __name__ == "__main__":
     print("Frontend applied :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
 
     if not args.test:
-        """WP_R = Wasserstein_Procrustes_Alignment(
-            args, User_L, User_U, Emb_L, Emb_U,
-            verbose=True        )"""
+        #  WP_R = Wasserstein_Procrustes_Alignment(
+            #  args, User_L, User_U, Emb_L, Emb_U,
+            #  verbose=True        )
         
         WP_R = procrustes(Emb_U, Emb_L)
         print("Compute done :", WP_R.shape)
@@ -386,7 +386,6 @@ if __name__ == "__main__":
 
     else:
         WP_R = np.load(args.rotation)
-        #WP_R = procrustes(Emb_U, Emb_L)
 
     acc_U, acc_F = top1(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L)
     print("Top 1:", acc_U, acc_F)

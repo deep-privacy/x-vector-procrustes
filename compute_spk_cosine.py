@@ -4,6 +4,7 @@ import kaldiio
 from scipy.spatial.distance import cosine
 from sklearn.metrics import roc_curve
 import numpy as np
+from sklearn.preprocessing import normalize
 
 
 def compute_eer(y_pred, y):
@@ -42,8 +43,8 @@ def main(args):
     with kaldiio.ReadHelper(f'scp:{args.trial_scp_dir}/{args.trial_scp}') as reader:
         utt2embd2s = {utt:embd for utt, embd in reader}
 
-    utt2embd1s = [utt2embd1s[utt] for utt in utt1s] # check
-    utt2embd2s = [utt2embd2s[utt] for utt in utt2s] # check
+    utt2embd1s = [utt2embd1s[utt] for utt in utt1s]
+    utt2embd2s = [utt2embd2s[utt] for utt in utt2s]
 
     scores = cosine_scoring(utt2embd1s, utt2embd2s)
     np.savetxt(args.output, scores, fmt='%.4f')

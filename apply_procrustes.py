@@ -13,14 +13,17 @@ def main(args):
     # Convert from dictionaries to numpy arrays
     u_out, u_out_label = (
         np.array([x_vector_u[i] for i in x_vector_u]),
-        np.array([i.split("-")[0] for i in x_vector_u]).astype(int),
+        np.array([i for i in x_vector_u]),
     )
     emb, _, _, _ = frontend(args, u_out, u_out_label, np.zeros((512,512)), np.zeros((512,)))
 
     emb = normalize(emb)
 
     R_emb = np.dot(emb, R)
-    print(R_emb[0][:4])
+
+    scp_data = {u_out_label[i]: embd for i, embd in enumerate(R_emb)}
+
+    kaldiio.save_ark(f'{args.emb_out}/transformed_xvector.ark', scp_data, scp=f'{args.emb_out}/transformed_xvector.scp')
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ show_vpc_scores=true
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
 # Frontend params
-frontend_train="--pca --pca_n_dim 70"
+# frontend_train="--pca --pca_n_dim 70"
 
 wass_procrustes_param="--niter 512 --bsz 8 --lr 10"  # Hyperparameter found with grid search
 
@@ -127,10 +127,10 @@ if [ $stage -le 2 ]; then
        --noplot
 
     python ./Wasserstein_Procrustes.py \
-      --emb_tgt $expe_dir/Emb_U.npy \
-      --label_tgt $expe_dir/User_U.npy \
-      --emb_src $expe_dir/Emb_L.npy \
-      --label_src $expe_dir/User_L.npy \
+      --emb_src $expe_dir/Emb_U.npy \
+      --label_src $expe_dir/User_U.npy \
+      --emb_tgt $expe_dir/Emb_L.npy \
+      --label_tgt $expe_dir/User_L.npy \
       --rotation exp/WP_R.npy \
       $frontend_test \
       --test
@@ -169,10 +169,25 @@ if [ $stage -le 3 ]; then
 fi
 
 if [ $stage -le 4 ]; then
-  dset=f
-  exp=x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor
-  python ./apply_procrustes.py \
-    --emb_src ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
-    --rotation ./exp/WP_R.npy \
-    $frontend_test
+  for dset in "f" "m";do
+    exp="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"
+    python ./apply_procrustes.py \
+      --emb_src ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
+      --emb_out ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
+      --rotation ./exp/WP_R.npy \
+      $frontend_test
+  done
+
+  for dset in "f" "m";do
+    exp_o="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
+    exp_a="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"
+
+    printf "**ASV (anon - after apply_procrustes): ${RED}test_trials_${dset} ${GREEN}anonymized => procrustes${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+    python compute_spk_cosine.py \
+      ./data/${exp_a}/xvect_libri_test_trials_${dset}/meta/trials \
+      ./data/${exp_a}/xvect_libri_test_trials_${dset}_anon/ \
+      ./data/${exp_o}/xvect_libri_test_enrolls/ \
+     ./exp/cosine_scores.txt \
+     --trial-scp transformed_xvector.scp
+  done
 fi
