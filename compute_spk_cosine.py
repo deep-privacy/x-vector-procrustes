@@ -38,21 +38,21 @@ def main(args):
         target = None
 
     with kaldiio.ReadHelper(f'scp:{args.enroll_scp_dir}/{args.enroll_scp}') as reader:
-        utt2embd1s = {utt:embd for utt, embd in reader}
+        utt2embd_enroll = {utt:embd for utt, embd in reader}
 
     with kaldiio.ReadHelper(f'scp:{args.trial_scp_dir}/{args.trial_scp}') as reader:
-        utt2embd2s = {utt:embd for utt, embd in reader}
+        utt2embd_trial = {utt:embd for utt, embd in reader}
 
-    utt2embd1s = [utt2embd1s[utt] for utt in utt1s]
-    utt2embd2s = [utt2embd2s[utt] for utt in utt2s]
+    utt2embd_enroll = [utt2embd_enroll[utt] for utt in utt1s]
+    utt2embd_trial = [utt2embd_trial[utt] for utt in utt2s]
 
-    scores = cosine_scoring(utt2embd1s, utt2embd2s)
+    scores = cosine_scoring(utt2embd_enroll, utt2embd_trial)
     np.savetxt(args.output, scores, fmt='%.4f')
 
     if target is not None:
         eer, threshold = compute_eer(scores, target)
         print("EER: {:.2f}%".format(eer * 100))
-        #  print("Threshold: {:.2f}".format(threshold))
+        print("Threshold: {:.2f}".format(threshold))
 
 
 if __name__ == '__main__':
