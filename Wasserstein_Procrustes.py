@@ -378,7 +378,7 @@ if __name__ == "__main__":
     if not args.test:
         #  WP_R = Wasserstein_Procrustes_Alignment(
             #  args, User_L, User_U, Emb_L, Emb_U,
-            #  verbose=True        )
+            #  verbose=True)
         
         WP_R = procrustes(Emb_U, Emb_L)
         print("Compute done :", WP_R.shape)
