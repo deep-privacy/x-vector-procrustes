@@ -37,6 +37,9 @@ def parse_arguments():
         "--niter", default=1024, type=int, help="Initial number of iterations"
     )
     parser.add_argument("--bsz", default=40, type=int, help="Initial batch size")
+
+
+    # frontend args
     parser.add_argument(
         "--lda", action="store_true", help="apply LDA first and normalize"
     )
@@ -54,6 +57,8 @@ def parse_arguments():
     parser.add_argument(
         "--kmeans_num_cluster", default=-1, type=int, help="Number of KMeans cluster"
     )
+    # END Frontend args
+
     parser.add_argument("--lr", default=50, type=float, help="Learning rate")
     parser.add_argument(
         "--nmax",
@@ -399,7 +404,7 @@ if __name__ == "__main__":
         Emb_A = normalize(Emb_A)
         Emb_B = normalize(Emb_B)
 
-        Xn, Yn = Emb_A, np.dot(Emb_B, WP_R)
+        Xn, Yn = Emb_A, np.dot(Emb_B, WP_R.T)
         Ux, Uy = User_A, User_B
         n_emb = len(Xn)
         L = np.zeros(n_emb).astype(int)

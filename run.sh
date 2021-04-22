@@ -138,3 +138,40 @@ if [ $stage -le 2 ]; then
 
   printf "${GREEN}Done${NC}\n"
 fi
+
+if [ $stage -le 3 ]; then
+  for exp in "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker" \
+              "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"; do
+  slug=original
+  if [[ $exp == *retrained* ]]; then
+    slug=anon
+  fi
+    for dset in "f" "m";do
+      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}original${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+      python compute_spk_cosine.py \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/ \
+        ./data/${exp}/xvect_libri_test_enrolls/ \
+       ./exp/cosine_scores.txt
+    done
+
+    for dset in "f" "m";do
+      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}anonymized${RED}${NC}**\n"
+      python compute_spk_cosine.py \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
+        ./data/${exp}/xvect_libri_test_enrolls_anon/ \
+       ./exp/cosine_scores.txt
+    done
+    printf "\n"
+  done
+fi
+
+if [ $stage -le 4 ]; then
+  dset=f
+  exp=x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor
+  python ./apply_procrustes.py \
+    --emb_src ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
+    --rotation ./exp/WP_R.npy \
+    $frontend_test
+fi
