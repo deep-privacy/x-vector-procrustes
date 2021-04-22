@@ -13,6 +13,8 @@ def compute_eer(y_pred, y):
     idx = np.nanargmin(np.absolute((fnr - fpr)))
     eer = (fpr[idx] + fnr[idx]) / 2
     thre = threshold[idx]
+    if eer > 0.50:
+        eer = 0.50 - (eer - 0.500)
     return eer, thre
 
 

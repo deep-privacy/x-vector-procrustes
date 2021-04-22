@@ -387,6 +387,7 @@ if __name__ == "__main__":
     else:
         WP_R = np.load(args.rotation)
 
+
     acc_U, acc_F = top1(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L)
     print("Top 1:", acc_U, acc_F)
     for n in [3,5,7,10, 25, 50, 100, len(User_L)]:

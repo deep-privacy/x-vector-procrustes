@@ -140,13 +140,16 @@ if [ $stage -le 2 ]; then
   printf "${GREEN}Done${NC}\n"
 fi
 
+slug=original
 if [ $stage -le 3 ]; then
+  printf "${GREEN}Reproduce VoicePrivacy EER results with cosine scoring${NC}\n"
   for exp in "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker" \
               "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"; do
-  slug=original
   if [[ $exp == *retrained* ]]; then
     slug=anon
-  fi
+    printf "${GREEN}Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)${NC}\n"
+
+  else
     for dset in "f" "m";do
       printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}original${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
       python compute_spk_cosine.py \
@@ -155,6 +158,15 @@ if [ $stage -le 3 ]; then
         ./data/${exp}/xvect_libri_test_enrolls/ \
        ./exp/cosine_scores.txt
     done
+    for dset in "f" "m";do
+      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+      python compute_spk_cosine.py \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
+        ./data/${exp}/xvect_libri_test_enrolls/ \
+       ./exp/cosine_scores.txt
+    done
+  fi
 
     for dset in "f" "m";do
       printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}anonymized${RED}${NC}**\n"
@@ -169,6 +181,10 @@ if [ $stage -le 3 ]; then
 fi
 
 if [ $stage -le 4 ]; then
+  printf "${GREEN}Perform likability between Anonymized and Orignal speech\\n\
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)\\n\
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech) ${NC}\n"
+
   for dset in "f" "m";do
     exp="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"
     python ./apply_procrustes.py \
@@ -182,7 +198,20 @@ if [ $stage -le 4 ]; then
     exp_o="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
     exp_a="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"
 
-    printf "**ASV (anon - after apply_procrustes): ${RED}test_trials_${dset} ${GREEN}anonymized => procrustes${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+    printf "**ASV (anon/original): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+    python compute_spk_cosine.py \
+      ./data/${exp_a}/xvect_libri_test_trials_${dset}/meta/trials \
+      ./data/${exp_a}/xvect_libri_test_trials_${dset}_anon/ \
+      ./data/${exp_o}/xvect_libri_test_enrolls/ \
+     ./exp/cosine_scores.txt \
+     --trial-scp xvector.scp
+  done
+
+  for dset in "f" "m";do
+    exp_o="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
+    exp_a="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker_retrained_xtractor"
+
+    printf "**ASV (anon/original - after apply_procrustes): ${RED}test_trials_${dset} ${GREEN}anonymized => procrustes${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
     python compute_spk_cosine.py \
       ./data/${exp_a}/xvect_libri_test_trials_${dset}/meta/trials \
       ./data/${exp_a}/xvect_libri_test_trials_${dset}_anon/ \
