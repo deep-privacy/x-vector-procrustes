@@ -5,3 +5,7 @@ env.sh
 Miniconda3-py38_4.9.2-Linux-x86_64.sh
 numpy_arrays
 exp
+transformed_xvector.scp
+transformed_xvector.ark
+*.pkl
+OAR*

@@ -19,15 +19,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description="Wasserstein Procrustes for Embedding Alignment"
-    )
+def parse_arguments(parser):
     parser.add_argument("--emb_src", type=str, help="Path to source embeddings")
     parser.add_argument("--emb_tgt", type=str, help="Path to target embeddings")
     parser.add_argument("--label_src", type=str, help="Path to source labels")
     parser.add_argument("--label_tgt", type=str, help="Path to target labels")
-    parser.add_argument("--rotation", type=str, help="Path to WP rotation")
+    parser.add_argument("--rotation", type=str, help="Path to WP rotation to save")
 
     parser.add_argument(
         "--seed", default=1111, type=int, help="Random number generator seed"
@@ -361,7 +358,11 @@ def topn(Xn, Yn, Ux, Uy, n=1):
 
 if __name__ == "__main__":
 
-    args = parse_arguments()
+
+    parser = argparse.ArgumentParser(
+        description="Wasserstein Procrustes for Embedding Alignment"
+    )
+    args = parse_arguments(parser)
     User_U = np.load(args.label_src)
     User_L = np.load(args.label_tgt)
     Emb_U_ = np.load(args.emb_src)
@@ -371,7 +372,7 @@ if __name__ == "__main__":
     Emb_U = normalize(Emb_U_)
     Emb_L = normalize(Emb_L_)
 
-    print("Data Loaded :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
+    print("Data Loaded :     ", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
     Emb_U, User_U, Emb_L, User_L = frontend(args, Emb_U, User_U, Emb_L, User_L)
     print("Frontend applied :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
 
@@ -389,7 +390,7 @@ if __name__ == "__main__":
 
 
     acc_U, acc_F = top1(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L)
-    print("Top 1:", acc_U, acc_F)
-    for n in [3,5,7,10, 25, 50, 100, len(User_L)]:
+    print("Top {:3}:\t{:.2f}\t {:.2f}".format(1, acc_U, acc_F))
+    for n in [3,5,10,len(User_L)]:
         acc_U, acc_F = topn(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L, n=n)
-        print("Top",n,":", acc_U, acc_F)
+        print("Top {:3}:\t{:.2f}\t {:.2f}".format(n,acc_U, acc_F))

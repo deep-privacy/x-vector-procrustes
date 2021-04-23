@@ -10,12 +10,17 @@ show_vpc_scores=true
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
+# OLD VERSION (ussing Wasserstein P)
+#  https://github.com/deep-privacy/x-vector-procrustes/commit/f23879559e645b9204689c66bcff99b2a98a7f05
 # Frontend params
 # frontend_train="--pca --pca_n_dim 70"
+# wass_procrustes_param="--niter 512 --bsz 8 --lr 10"  # Hyperparameter found with grid search
 
-wass_procrustes_param="--niter 512 --bsz 8 --lr 10"  # Hyperparameter found with grid search
 # anon xvector extracted with anon model
-retrained_anon_xtractor=false
+retrained_anon_xtractor=true
+
+# procrustes trained on ("f", "m" or "")
+filter_gender=""
 
 
 #=====  end config  =======
@@ -72,6 +77,15 @@ fi
 if [ $stage -le 0 ]; then
   anon_dset=xvect_libri_test_enrolls_anon
   original_dset=xvect_libri_test_enrolls
+
+  # Calculate theorical likability after training procrustes on test datatest
+  # anon_dset=xvect_libri_test_trials_f_anon
+  # original_dset=xvect_libri_test_trials_f
+
+  # Calculate theorical likability after training procrustes on test datatest
+  # anon_dset=xvect_libri_test_trials_m_anon
+  # original_dset=xvect_libri_test_trials_m
+
   # ONE OF: xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls
 
   if $show_vpc_scores; then
@@ -92,13 +106,14 @@ if [ $stage -le 0 ]; then
      ./data/${anon_exp_parameter}${anon_xtractor}/$anon_dset/xvector.scp \
      "$expe_dir/Emb_U" "$expe_dir/User_U" \
      "$expe_dir/Emb_L" "$expe_dir/User_L" \
-     --noplot
+     --noplot \
+     --filter_gender $filter_gender
 
   printf "${GREEN}== Training procrustes UV ==${NC}\n"
 
   expe_dir=exp/enroll_train_wp
 
-  python ./Wasserstein_Procrustes.py \
+  python ./get_align_procrustes.py \
     --emb_src $expe_dir/Emb_U.npy \
     --label_src $expe_dir/User_U.npy \
     --emb_tgt $expe_dir/Emb_L.npy \
@@ -110,7 +125,7 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ]; then
-  printf "${GREEN}== TEST trained procrustes UV ==${NC}\n"
+  printf "${GREEN}== TEST procrustes UV ==${NC}\n"
 
   expe_dir=exp/trials_test
   mkdir -p $expe_dir
@@ -120,15 +135,16 @@ if [ $stage -le 1 ]; then
     original_dset=xvect_libri_test_${dset}
     anon_dset=xvect_libri_test_${dset}_anon
 
+
+    printf "**Accuracy ${RED}$dset ${GREEN}anonymized => procrustes${NC} => ${RED}$dset - ${GREEN}original${RED}${NC}**\n"
     python ./prep_dset.py \
        ./data/$anon_exp_parameter/$original_dset/xvector.scp \
        ./data/${anon_exp_parameter}${anon_xtractor}/$anon_dset/xvector.scp \
        "$expe_dir/Emb_U" "$expe_dir/User_U" \
        "$expe_dir/Emb_L" "$expe_dir/User_L" \
-       --filter_scp_trials_enrolls \
        --noplot
 
-    python ./Wasserstein_Procrustes.py \
+    python ./get_align_procrustes.py \
       --emb_src $expe_dir/Emb_U.npy \
       --label_src $expe_dir/User_U.npy \
       --emb_tgt $expe_dir/Emb_L.npy \
@@ -138,18 +154,20 @@ if [ $stage -le 1 ]; then
       --test
 
   done
-
-  printf "${GREEN}Done${NC}\n"
 fi
 
 slug=original
 if [ $stage -le 2 ]; then
   printf "${GREEN}Reproduce VoicePrivacy EER results with cosine scoring${NC}\n"
   index=0
-  for exp in "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker" \
-              "x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker${anon_xtractor}"; do
+  for exp in "$anon_exp_parameter" \
+              "$anon_exp_parameter${anon_xtractor}"; do
   if [[ $index == 1 ]]; then
     slug=anon
+    if ! $retrained_anon_xtractor; then
+      break
+    fi
+
     printf "${GREEN}Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)${NC}\n"
 
   else
@@ -190,17 +208,17 @@ if [ $stage -le 3 ]; then
   Original x-vector -> (extracted by a x-vector trained on anonymized speech) ${NC}\n"
 
   for dset in "f" "m";do
-    exp="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker${anon_xtractor}"
+    exp="$anon_exp_parameter${anon_xtractor}"
     python ./apply_procrustes.py \
-      --emb_src ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
+      --emb_in ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
       --emb_out ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
       --rotation ./exp/WP_R.npy \
       $frontend_test
   done
 
   for dset in "f" "m";do
-    exp_o="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
-    exp_a="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker${anon_xtractor}"
+    exp_o="$anon_exp_parameter"
+    exp_a="$anon_exp_parameter${anon_xtractor}"
 
     printf "**ASV: ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
     python compute_spk_cosine.py \
@@ -212,8 +230,8 @@ if [ $stage -le 3 ]; then
   done
 
   for dset in "f" "m";do
-    exp_o="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
-    exp_a="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker${anon_xtractor}"
+    exp_o="$anon_exp_parameter"
+    exp_a="$anon_exp_parameter${anon_xtractor}"
 
     printf "**ASV: ${RED}test_trials_${dset} ${GREEN}anonymized => procrustes${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
     python compute_spk_cosine.py \

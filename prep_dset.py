@@ -49,6 +49,15 @@ parser.add_argument(
     help="All 'Unlabeled' x-vector speaker are present in the 'Label' scp",
 )
 
+# Optional argument
+parser.add_argument(
+    "--filter_gender",
+    type=str,
+    nargs='?',
+    default="",
+    help="Filter by gender 'f' or 'm'",
+)
+
 args = parser.parse_args()
 
 x_vector_u = {}
@@ -85,17 +94,42 @@ if args.filter_scp_trials_enrolls:
             x_vector_u.pop(k)
     print("x_vector_u samples after filtering:", len(x_vector_u))
 
+if args.filter_gender != "" and args.filter_gender:
+    with open(
+        os.path.dirname(args.x_vector_l)
+        + os.path.sep
+        + "meta"
+        + os.path.sep
+        + "spk2gender"
+    ) as f:
+        spk2gender = f.read().splitlines()
+        spk2gender = {spk:gender for spk, gender in list(map(lambda x: x.split(" "), spk2gender))}
+    print(f"Filtering by gender {args.filter_gender}")
+    print("x_vector_l samples:", len(x_vector_l))
+    print("x_vector_u samples:", len(x_vector_u))
+    for k, m in x_vector_u.copy().items():
+        spk = k.split("-")[0]
+        if spk2gender[spk] != args.filter_gender:
+            x_vector_u.pop(k)
+    for k, m in x_vector_l.copy().items():
+        spk = k.split("-")[0]
+        if spk2gender[spk] != args.filter_gender:
+            x_vector_l.pop(k)
+    print("x_vector_l samples after filtering:", len(x_vector_l))
+    print("x_vector_u samples after filtering:", len(x_vector_u))
+
+
 # Convert from dictionaries to numpy arrays
 u_out, u_out_label = (
     np.array([x_vector_u[i] for i in x_vector_u]),
     np.array([i.split("-")[0] for i in x_vector_u]).astype(int),
 )
-print(u_out.shape, u_out_label.shape, set(u_out_label))
+#  print(u_out.shape, u_out_label.shape, set(u_out_label))
 l_out, l_out_label = (
     np.array([x_vector_l[i] for i in x_vector_l]),
     np.array([i.split("-")[0] for i in x_vector_l]).astype(int),
 )
-print(l_out.shape, l_out_label.shape, set(l_out_label))
+#  print(l_out.shape, l_out_label.shape, set(l_out_label))
 # Convert users id to 0-N numbers
 id_tr, id_en = {x: i for i, x in enumerate(list(set(l_out_label)))}, {
     x: i for i, x in enumerate(list(set(u_out_label)))
