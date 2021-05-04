@@ -7,6 +7,7 @@ set -e
 stage=0
 fix_scp=false
 show_vpc_scores=true
+skip_stage=
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
@@ -74,7 +75,53 @@ if [ $stage -le -1 ]; then
   exit 0
 fi
 
+slug=original
 if [ $stage -le 0 ]; then
+  printf "${GREEN}Reproduce VoicePrivacy EER results with cosine scoring${NC}\n"
+  index=0
+  for exp in "$anon_exp_parameter" \
+              "$anon_exp_parameter${anon_xtractor}"; do
+  if [[ $index == 1 ]]; then
+    slug=anon
+    if ! $retrained_anon_xtractor; then
+      break
+    fi
+
+    printf "${GREEN}Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)${NC}\n"
+
+  else
+    for dset in "f" "m";do
+      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}original${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+      python compute_spk_cosine.py \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/ \
+        ./data/${exp}/xvect_libri_test_enrolls/ \
+       ./exp/cosine_scores.txt
+    done
+    for dset in "f" "m";do
+      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
+      python compute_spk_cosine.py \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
+        ./data/${exp}/xvect_libri_test_enrolls/ \
+       ./exp/cosine_scores.txt
+    done
+  index=1
+  fi
+
+    for dset in "f" "m";do
+      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}anonymized${RED}${NC}**\n"
+      python compute_spk_cosine.py \
+        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
+        ./data/${exp}/xvect_libri_test_enrolls_anon/ \
+       ./exp/cosine_scores.txt
+    done
+    printf "\n"
+  done
+fi
+
+if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
   anon_dset=xvect_libri_test_enrolls_anon
   original_dset=xvect_libri_test_enrolls
 
@@ -124,7 +171,7 @@ if [ $stage -le 0 ]; then
   printf "${GREEN}Done${NC}\n"
 fi
 
-if [ $stage -le 1 ]; then
+if [ $stage -le 2 ] && ! echo $skip_stage | grep -w -q 2; then
   printf "${GREEN}== TEST procrustes UV ==${NC}\n"
 
   expe_dir=exp/trials_test
@@ -156,53 +203,8 @@ if [ $stage -le 1 ]; then
   done
 fi
 
-slug=original
-if [ $stage -le 2 ]; then
-  printf "${GREEN}Reproduce VoicePrivacy EER results with cosine scoring${NC}\n"
-  index=0
-  for exp in "$anon_exp_parameter" \
-              "$anon_exp_parameter${anon_xtractor}"; do
-  if [[ $index == 1 ]]; then
-    slug=anon
-    if ! $retrained_anon_xtractor; then
-      break
-    fi
 
-    printf "${GREEN}Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)${NC}\n"
-
-  else
-    for dset in "f" "m";do
-      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}original${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
-      python compute_spk_cosine.py \
-        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
-        ./data/${exp}/xvect_libri_test_trials_${dset}/ \
-        ./data/${exp}/xvect_libri_test_enrolls/ \
-       ./exp/cosine_scores.txt
-    done
-    for dset in "f" "m";do
-      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
-      python compute_spk_cosine.py \
-        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
-        ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
-        ./data/${exp}/xvect_libri_test_enrolls/ \
-       ./exp/cosine_scores.txt
-    done
-  index=1
-  fi
-
-    for dset in "f" "m";do
-      printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}anonymized${RED}${NC}**\n"
-      python compute_spk_cosine.py \
-        ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
-        ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
-        ./data/${exp}/xvect_libri_test_enrolls_anon/ \
-       ./exp/cosine_scores.txt
-    done
-    printf "\n"
-  done
-fi
-
-if [ $stage -le 3 ]; then
+if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
   printf "${GREEN}Perform likability between Anonymized and Orignal speech\\n\
   Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)\\n\
   Original x-vector -> (extracted by a x-vector trained on anonymized speech) ${NC}\n"
