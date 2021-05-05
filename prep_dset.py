@@ -2,6 +2,8 @@ import argparse  # https://stackoverflow.com/a/30493366
 import sys
 import os
 from kaldiio import ReadHelper
+import itertools
+from tqdm.contrib import tzip
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,6 +49,13 @@ parser.add_argument(
     "--filter_scp_trials_enrolls",
     action="store_true",
     help="All 'Unlabeled' x-vector speaker are present in the 'Label' scp",
+)
+
+# Optional argument
+parser.add_argument(
+    "--spk_utt_all_combinations",
+    action="store_true",
+    help="Get all possible combinations of a speaker to segments pairs (instead of utt -> utt_anon)",
 )
 
 # Optional argument
@@ -138,6 +147,34 @@ u_out_label, l_out_label = (
     np.array([id_en[i] for i in u_out_label]).astype(int),
     np.array([id_tr[i] for i in l_out_label]).astype(int),
 )
+
+if args.spk_utt_all_combinations:
+
+    all_combination = list(itertools.product(u_out, l_out))
+    all_combination_label = list(itertools.product(u_out_label, l_out_label))
+
+    u_out = []
+    l_out = []
+
+    u_out_label = np.array([])
+    l_out_label = np.array([])
+
+    for (u, l),(u_label, l_label) in tzip(all_combination,all_combination_label):
+        if u_label != l_label:
+            continue
+        if len(u_out) == 0:
+            u_out = np.array([u])
+            l_out = np.array([l])
+        else:
+            u_out = np.append(u_out, [u], axis=0)
+            l_out = np.append(l_out, [l], axis=0)
+
+        u_out_label = np.append(u_out_label, u_label)
+        l_out_label = np.append(l_out_label, l_label)
+
+    print("x_vector_l samples after all_combination:", len(l_out))
+    print("x_vector_u samples after all_combination:", len(u_out))
+
 
 np.save(args.x_vector_u_out, u_out)
 np.save(args.x_vector_l_out, l_out)

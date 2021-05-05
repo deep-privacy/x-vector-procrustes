@@ -56,6 +56,10 @@ def parse_arguments(parser):
     )
     # END Frontend args
 
+    parser.add_argument(
+        "--top_k", action="store_true", help="Display top 3,5,10.. Accuracy"
+    )
+
     parser.add_argument("--lr", default=50, type=float, help="Learning rate")
     parser.add_argument(
         "--nmax",
@@ -382,7 +386,7 @@ if __name__ == "__main__":
             #  verbose=True)
         
         WP_R = procrustes(Emb_U, Emb_L)
-        print("Compute done :", WP_R.shape)
+        print("Compute done, rotation shape :", WP_R.shape)
         np.save(args.rotation, WP_R)
 
     else:
@@ -391,6 +395,7 @@ if __name__ == "__main__":
 
     acc_U, acc_F = top1(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L)
     print("Top {:3}:\t{:.2f}\t {:.2f}".format(1, acc_U, acc_F))
-    for n in [3,5,10,len(User_L)]:
-        acc_U, acc_F = topn(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L, n=n)
-        print("Top {:3}:\t{:.2f}\t {:.2f}".format(n,acc_U, acc_F))
+    if args.top_k:
+        for n in [3,5,10,len(User_L)]:
+            acc_U, acc_F = topn(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L, n=n)
+            print("Top {:3}:\t{:.2f}\t {:.2f}".format(n,acc_U, acc_F))

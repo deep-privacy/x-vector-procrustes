@@ -125,11 +125,11 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
   anon_dset=xvect_libri_test_enrolls_anon
   original_dset=xvect_libri_test_enrolls
 
-  # Calculate theorical likability after training procrustes on test datatest
+  # Calculate theorical best likability after training procrustes on test datatest
   # anon_dset=xvect_libri_test_trials_f_anon
   # original_dset=xvect_libri_test_trials_f
 
-  # Calculate theorical likability after training procrustes on test datatest
+  # Calculate theorical best likability after training procrustes on test datatest
   # anon_dset=xvect_libri_test_trials_m_anon
   # original_dset=xvect_libri_test_trials_m
 
@@ -154,7 +154,8 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
      "$expe_dir/Emb_U" "$expe_dir/User_U" \
      "$expe_dir/Emb_L" "$expe_dir/User_L" \
      --noplot \
-     --filter_gender $filter_gender
+     --filter_gender $filter_gender \
+     # --spk_utt_all_combinations
 
   printf "${GREEN}== Training procrustes UV ==${NC}\n"
 
