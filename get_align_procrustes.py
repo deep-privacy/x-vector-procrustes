@@ -172,10 +172,9 @@ def procrustes(X_src, Y_tgt):
     return np.dot(U, V)
 
 
-def compute_nn_accuracy(X, Y, R, Ux, Uy):
+def compute_optimal_corresp(X, Y, R):
     size = min(len(X), len(Y))
     if len(X) != size or len(Y) != size:
-        Ux, Uy = Ux[:size], Uy[:size]
         if len(X) != size:
             X = X[:size]
         if len(Y) != size:
@@ -198,9 +197,8 @@ def compute_nn_accuracy(X, Y, R, Ux, Uy):
             dim=1,
         ).numpy()
         L[i] = np.argmin(distances)
-    acc_U, acc_F = np.sum(Uy[L] == Ux), np.sum(L == np.arange(len(L)))
 
-    return acc_U / size, acc_F / size, P, np.array(L).astype(int)
+    return  np.array(L).astype(int)
 
 
 def Stiefel_Manifold(R):
@@ -290,16 +288,14 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
 
 def Wasserstein_Procrustes_Alignment(
     args,
-    User_L,User_U,
     Emb_L, Emb_U,
     verbose=False,
     last_iter=False
     ):
 
-    idx = np.arange(min(len(User_L), len(User_U)))
-    corres = idx
+    corres = np.arange(min(len(Emb_L), len(Emb_U)))
 
-    ninit = min(len(User_U), 1000)
+    ninit = min(len(Emb_U), 1000)
     if args.nmax != -1:
         N_pts_used = args.nmax
     else:
@@ -332,13 +328,11 @@ def Wasserstein_Procrustes_Alignment(
     )
 
     # comparison bewteen X.R et P.Y
-    _, _, P, L = compute_nn_accuracy(
-        x_src[corres], x_tgt, R, User_U[corres], User_L
-    )
+    L = compute_optimal_corresp(x_src[corres], x_tgt, R )
 
-    R_final = procrustes(x_src[:N_pts_used], (x_tgt[:N_pts_used])[L]).T
+    R_final = procrustes(x_src[:N_pts_used], (x_tgt[:N_pts_used])[L])
     
-    return Stiefel_Manifold(R_final)
+    return R_final
 
 def top1(Xn, Yn, Ux, Uy):
     compute_unit = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -382,7 +376,7 @@ if __name__ == "__main__":
 
     if not args.test:
         #  WP_R = Wasserstein_Procrustes_Alignment(
-            #  args, User_L, User_U, Emb_L, Emb_U,
+            #  args, Emb_L, Emb_U,
             #  verbose=True)
         
         WP_R = procrustes(Emb_U, Emb_L)
