@@ -206,6 +206,11 @@ if [ $stage -le 2 ] && ! echo $skip_stage | grep -w -q 2; then
 
   for dset in enrolls trials_f trials_m; do
 
+    gender_test=${dset: -1}
+    if [[ "${gender_test}" != "$filter_gender" ]] && [[ "${filter_gender}" != "" ]]; then
+      continue
+    fi
+
     original_dset=xvect_libri_test_${dset}
     anon_dset=xvect_libri_test_${dset}_anon
 
@@ -237,6 +242,10 @@ if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
   Original x-vector -> (extracted by a x-vector trained on anonymized speech) ${NC}\n"
 
   for dset in "f" "m";do
+    if [[ "${dset}" != "$filter_gender" ]] && [[ "${filter_gender}" != "" ]]; then
+      continue
+    fi
+
     exp="$anon_exp_parameter${anon_xtractor}"
     python ./apply_procrustes.py \
       --emb_in ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
@@ -247,6 +256,10 @@ if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
   done
 
   for dset in "f" "m";do
+    if [[ "${dset}" != "$filter_gender" ]] && [[ "${filter_gender}" != "" ]]; then
+      continue
+    fi
+
     exp_o="$anon_exp_parameter"
     exp_a="$anon_exp_parameter${anon_xtractor}"
 
