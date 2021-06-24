@@ -410,6 +410,7 @@ Procrustes linkability and reversibility Scores x-tractor anon gender specific t
 <summary> results (merged):</summary>
 
 ```wiki
+Filtering by gender f
 == TEST rotation irreversibility ==
 **Accuracy enrolls anonymized => procrustes => enrolls - original**
 Loading pca from: exp/enroll_train_wp
@@ -425,6 +426,7 @@ Loading pca from: exp/enroll_train_wp
 EER: 14.60%
 
 
+Filtering by gender m
 == TEST rotation irreversibility ==
 **Accuracy enrolls anonymized => procrustes => enrolls - original**
 Loading pca from: exp/enroll_train_wp
