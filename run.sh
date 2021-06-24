@@ -156,12 +156,14 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
 
   # Calculate theorical best likability after training procrustes on test datatest
   if $oracle_f; then
+    filter_gender="f"
     anon_dset=xvect_libri_test_trials_f_anon
     original_dset=xvect_libri_test_trials_f
   fi
 
   # Calculate theorical best likability after training procrustes on test datatest
   if $oracle_m; then
+    filter_gender="m"
     anon_dset=xvect_libri_test_trials_m_anon
     original_dset=xvect_libri_test_trials_m
   fi

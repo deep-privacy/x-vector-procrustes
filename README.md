@@ -811,3 +811,105 @@ EER: 13.18%
 
 
 ---
+
+### Oracle Procrustes
+
+```sh
+./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --retrained-anon-xtractor true --oracle-f true
+./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --retrained-anon-xtractor true --oracle-m true
+```
+
+<details>
+
+<summary> results (merged):</summary>
+
+```wiki
+Filtering by gender f
+== Training rotation ==
+Compute done, rotation shape : (70, 70)
+Top   1:        98.77    14.44
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        98.77    14.44
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 12.08%
+
+
+Filtering by gender m
+== Training rotation ==
+Computing PCA, 70 dimensions
+(762, 70) total explained variance ratio : 0.98975843
+(762, 70) total explained variance ratio : 0.9801181
+Compute done, rotation shape : (70, 70)
+Top   1:        98.03    11.29
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        98.03    11.29
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 8.70%
+```
+
+</details>
+
+### Oracle Wasserstein Procrustes
+```sh
+./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true --oracle-f true
+./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true --oracle-m true
+```
+
+<details>
+
+<summary> results (merged):</summary>
+
+```wiki
+Filtering by gender f
+== Training rotation ==
+Compute done, rotation shape : (70, 70)
+Top   1:        99.05    11.17
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        99.05    11.17
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 13.13%
+
+
+Filtering by gender m
+== Training rotation ==
+Compute done, rotation shape : (70, 70)
+Top   1:        98.43    7.87
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        98.43    7.87
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 9.96%
+```
+
+</details>
