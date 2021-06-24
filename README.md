@@ -1,6 +1,14 @@
 x-vector-procrustes
 ===================
 
+### Installation
+
+```sh
+./install.sh
+```
+
+### Experiments
+
 
 VoicePrivacy linkability Scores *without* retrained ASV on anon data:
 ```sh
