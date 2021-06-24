@@ -17,7 +17,7 @@ VoicePrivacy linkability Scores *without* retrained ASV on anon data:
 ```
 <details>
 
-<summary> results:</summary>
+<summary> results (Clickable :computer_mouse:):</summary>
 
 ```wiki
 **ASV (original): test_trials_f original <=> test_enrolls - original**
