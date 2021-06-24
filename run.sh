@@ -17,9 +17,6 @@ anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__dif
 # EER / linkability is calculated between de-anon-trial and original enroll
 ########
 
-# OLD VERSION (ussing Wasserstein P)
-#  https://github.com/deep-privacy/x-vector-procrustes/commit/f23879559e645b9204689c66bcff99b2a98a7f05
-
 # anon xvector extracted with anon model
 retrained_anon_xtractor=false
 
