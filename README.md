@@ -577,7 +577,7 @@ Wasserstein Procrustes linkability and reversibility Scores x-tractor original g
 
 <summary> results (merged):</summary>
 
-```md
+```wiki
 Filtering by gender f
 == Training rotation ==
 Computing PCA, 70 dimensions
