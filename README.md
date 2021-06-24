@@ -214,7 +214,6 @@ Compute done, rotation shape : (70, 70)
 Top   1:        94.49    40.94
 Done
 == TEST rotation irreversibility ==
-Top   1:        55.25    23.52
 **Accuracy trials_f anonymized => procrustes => trials_f - original**
 Loading pca from: exp/enroll_train_wp
 Top   1:        30.52    2.04
