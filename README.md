@@ -575,36 +575,36 @@ Done
 == TEST rotation irreversibility ==
 **Accuracy trials_f anonymized => procrustes => trials_f - original**
 Loading pca from: exp/enroll_train_wp
-Top   1:        16.76    1.09
+Top   1:        24.11    1.09
 == TEST likability between Anonymized and Orignal speech ==
   Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
   Original x-vector -> (extracted by a x-vector trained on anonymized speech)
 Loading pca from: exp/enroll_train_wp
 **ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
 Loading pca from: exp/enroll_train_wp
-EER: 26.67%
+EER: 26.35%
 
 
 Filtering by gender m
 == Training rotation ==
 Computing PCA, 70 dimensions
-(184, 70) total explained variance ratio : 0.9933953
-(184, 70) total explained variance ratio : 0.9853457
+(184, 70) total explained variance ratio : 0.9933947
+(184, 70) total explained variance ratio : 0.9853415
 Alignment Done
 Compute done, rotation shape : (70, 70)
-Top   1:        95.11    23.37
+Top   1:        99.46    20.11
 Done
 == TEST rotation irreversibility ==
 **Accuracy trials_m anonymized => procrustes => trials_m - original**
 Loading pca from: exp/enroll_train_wp
-Top   1:        45.28    1.57
+Top   1:        39.37    1.71
 == TEST likability between Anonymized and Orignal speech ==
   Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
   Original x-vector -> (extracted by a x-vector trained on anonymized speech)
 Loading pca from: exp/enroll_train_wp
 **ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
 Loading pca from: exp/enroll_train_wp
-EER: 27.17%
+EER: 25.17%
 ```
 
 </details>
