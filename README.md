@@ -116,8 +116,6 @@ Compute done, rotation shape : (512, 512)
 Top   1:        96.46    47.64
 Done
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Top   1:        59.59    27.85
 **Accuracy trials_f anonymized => procrustes => trials_f - original**
 Top   1:        26.57    1.77
 == TEST likability between Anonymized and Orignal speech ==
@@ -138,8 +136,6 @@ Compute done, rotation shape : (512, 512)
 Top   1:        97.28    54.35
 Done
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Top   1:        47.26    23.29
 **Accuracy trials_m anonymized => procrustes => trials_m - original**
 Top   1:        45.80    2.36
 == TEST likability between Anonymized and Orignal speech ==
@@ -218,8 +214,6 @@ Compute done, rotation shape : (70, 70)
 Top   1:        94.49    40.94
 Done
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Loading pca from: exp/enroll_train_wp
 Top   1:        55.25    23.52
 **Accuracy trials_f anonymized => procrustes => trials_f - original**
 Loading pca from: exp/enroll_train_wp
@@ -321,8 +315,6 @@ Compute done, rotation shape : (512, 512)
 Top   1:        99.21    53.54
 Done
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Top   1:        63.93    31.51
 **Accuracy trials_f anonymized => procrustes => trials_f - original**
 Top   1:        54.77    3.27
 == TEST likability between Anonymized and Orignal speech ==
@@ -343,8 +335,6 @@ Compute done, rotation shape : (512, 512)
 Top   1:        99.46    53.26
 Done
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Top   1:        46.58    23.06
 **Accuracy trials_m anonymized => procrustes => trials_m - original**
 Top   1:        56.56    3.02
 == TEST likability between Anonymized and Orignal speech ==
@@ -412,9 +402,6 @@ Procrustes linkability and reversibility Scores x-tractor anon gender specific t
 ```wiki
 Filtering by gender f
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Loading pca from: exp/enroll_train_wp
-Top   1:        57.53    24.66
 **Accuracy trials_f anonymized => procrustes => trials_f - original**
 Loading pca from: exp/enroll_train_wp
 Top   1:        59.81    3.27
@@ -428,9 +415,6 @@ EER: 14.60%
 
 Filtering by gender m
 == TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Loading pca from: exp/enroll_train_wp
-Top   1:        42.01    21.69
 **Accuracy trials_m anonymized => procrustes => trials_m - original**
 Loading pca from: exp/enroll_train_wp
 Top   1:        59.97    3.15
