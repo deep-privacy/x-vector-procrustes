@@ -24,6 +24,7 @@ def parse_arguments(parser):
     parser.add_argument("--emb_tgt", type=str, help="Path to target embeddings")
     parser.add_argument("--label_src", type=str, help="Path to source labels")
     parser.add_argument("--label_tgt", type=str, help="Path to target labels")
+    parser.add_argument("--wp", action="store_true", help="Use WP instead of P rotation estimation")
     parser.add_argument("--rotation", type=str, help="Path to WP rotation to save")
 
     parser.add_argument(
@@ -88,26 +89,9 @@ def sqrt_eig(x):
     return np.dot(U, np.dot(np.diag(np.sqrt(s)), VT))
 
 
-def align(
-    X,
-    Y,
-    R,
-    lr,
-    bsz,
-    nepoch,
-    niter,
-    corres,
-    nmax,
-    reg,
-    verbose,
-    last_iter,
-):
+def align(X, Y, R, lr, bsz, nepoch, niter, corres, nmax, reg, verbose, last_iter):
     for epoch in range(1, nepoch + 1):
-        for _it in (
-            tqdm(range(1, niter + 1), desc="alignment n°" + str(epoch))
-            if verbose
-            else range(1, niter + 1)
-        ):
+        for _it in (tqdm(range(1, niter + 1), desc="alignment n°" + str(epoch)) if verbose else range(1, niter + 1)):
             # sample mini-batch
             xt = X[np.random.permutation(nmax)[:bsz], :]
             yt = Y[np.random.permutation(nmax)[:bsz], :]
@@ -128,18 +112,7 @@ def align(
         if verbose:
             print(
                 "epoch: %d\t batchSize: %d\t niter: %d\t Wass_dist: %.3f\t distance: %.4f"
-                % (
-                    epoch,
-                    bsz,
-                    niter,
-                    objective(X, Y, R),
-                    np.mean(
-                        [
-                            np.linalg.norm(X[i] - np.dot(Y[corres[i]], R))
-                            for i in range(len(Y))
-                        ]
-                    ),
-                ),
+                % (epoch, bsz, niter, objective(X, Y, R), np.mean( [np.linalg.norm(X[i] - np.dot(Y[corres[i]], R)) for i in range(len(Y))] )),
             )
         if niter == 0 or ((not last_iter) and bsz >= min(len(X), len(Y))):
             print("Stopping alignment batchSize %d > total labels" % bsz)
@@ -201,11 +174,6 @@ def compute_optimal_corresp(X, Y, R):
     return  np.array(L).astype(int)
 
 
-def Stiefel_Manifold(R):
-    U, S, Vt = svd(R)
-    return np.dot(U, Vt)
-
-
 def KMeans_reshape(Emb, User, K):
     lab = KMeans(n_clusters=K, init=Emb[np.arange(K)]).fit(Emb).labels_
     nE, nU = np.zeros((K, Emb.shape[1])), np.zeros(K)
@@ -225,14 +193,20 @@ def KMeans_reshape(Emb, User, K):
 
 
 def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
+    # TODO add LDA and kmeans param loading
     if args.test:
         if args.pca:
             print("Loading pca from:", args.pca_load_path)
-            pca_reload_u = pk.load(open(args.pca_load_path + "/pca_emb_l.pkl", "rb"))
+            pca_reload_u = pk.load(open(args.pca_load_path + "/pca_emb_u.pkl", "rb"))
             Emb_U = pca_reload_u.transform(Emb_U_)
 
-            pca_reload_l = pk.load(open(args.pca_load_path + "/pca_emb_u.pkl", "rb"))
+            pca_reload_l = pk.load(open(args.pca_load_path + "/pca_emb_l.pkl", "rb"))
             Emb_L = pca_reload_l.transform(Emb_L_)
+
+            # DO normalize by DEFAULT
+            Emb_U = normalize(Emb_U)
+            Emb_L = normalize(Emb_L)
+
             return Emb_U, User_U, Emb_L, User_L
 
         if args.lda or args.kmeans:
@@ -244,6 +218,11 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
         Emb_U = LDA().fit_transform(Emb_U_, User_U)
         Emb_L = LDA().fit_transform(Emb_L_, User_L)
         print("Computed LDA", Emb_U.shape, Emb_L.shape)
+
+        # DO normalize by DEFAULT
+        Emb_U = normalize(Emb_U)
+        Emb_L = normalize(Emb_L)
+
         return Emb_U, User_U, Emb_L, User_L
 
     # DO PCA
@@ -267,6 +246,10 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
             "total explained variance ratio :",
             np.sum(pca.explained_variance_ratio_),
         )
+        # DO normalize by DEFAULT
+        Emb_U = normalize(Emb_U)
+        Emb_L = normalize(Emb_L)
+
         return Emb_U, User_U, Emb_L, User_L
 
     # DO Kmeans
@@ -275,23 +258,31 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
             Emb_L, User_L = KMeans_reshape(Emb_L, User_L, len(Emb_U))
         elif len(Emb_U) > len(Emb_L):
             Emb_U, User_U = KMeans_reshape(Emb_U, User_U, len(Emb_L))
+
+        # DO normalize by DEFAULT
+        Emb_U = normalize(Emb_U)
+        Emb_L = normalize(Emb_L)
+
         return Emb_U, User_U, Emb_L, User_L
 
     if args.kmeans and args.kmeans_num_cluster != -1:
         Emb_L, User_L = KMeans_reshape(Emb_L, User_L, args.kmeans_num_cluster)
         Emb_U, User_U = KMeans_reshape(Emb_U, User_U, args.kmeans_num_cluster)
+        # DO normalize by DEFAULT
+        Emb_U = normalize(Emb_U)
+        Emb_L = normalize(Emb_L)
+
         return Emb_U, User_U, Emb_L, User_L
 
-    return Emb_U_, User_U, Emb_L_, User_L
+    # DO normalize by DEFAULT
+    Emb_U = normalize(Emb_U_)
+    Emb_L = normalize(Emb_L_)
+
+    return Emb_U, User_U, Emb_L, User_L
 
 
 
-def Wasserstein_Procrustes_Alignment(
-    args,
-    Emb_L, Emb_U,
-    verbose=False,
-    last_iter=False
-    ):
+def Wasserstein_Procrustes_Alignment(args, Emb_L, Emb_U, verbose=False, last_iter=False):
 
     corres = np.arange(min(len(Emb_L), len(Emb_U)))
 
@@ -312,20 +303,7 @@ def Wasserstein_Procrustes_Alignment(
         apply_sqrt=True,
     )
 
-    R = align(
-        x_src,
-        x_tgt,
-        R0.copy(),
-        bsz=args.bsz,
-        lr=args.lr,
-        niter=args.niter,
-        corres=corres,
-        nepoch=args.nepoch,
-        reg=args.reg,
-        nmax=N_pts_used,
-        verbose=verbose,
-        last_iter=last_iter,
-    )
+    R = align(x_src, x_tgt, R0.copy(), bsz=args.bsz, lr=args.lr, niter=args.niter, corres=corres, nepoch=args.nepoch, reg=args.reg, nmax=N_pts_used, verbose=verbose, last_iter=last_iter)
 
     # comparison bewteen X.R et P.Y
     L = compute_optimal_corresp(x_src[corres], x_tgt, R )
@@ -355,31 +333,27 @@ def topn(Xn, Yn, Ux, Uy, n=1):
     return (100*np.sum(user_stat)/len(Ux), 100*np.sum(seg_stat)/len(Ux))
 
 if __name__ == "__main__":
-
-
     parser = argparse.ArgumentParser(
-        description="Wasserstein Procrustes for Embedding Alignment"
+        description="Embedding Alignment using Wasserstein Procrustes or Procrustes"
     )
     args = parse_arguments(parser)
     User_U = np.load(args.label_src)
     User_L = np.load(args.label_tgt)
-    Emb_U_ = np.load(args.emb_src)
-    Emb_L_ = np.load(args.emb_tgt)
+    Emb_U = np.load(args.emb_src)
+    Emb_L = np.load(args.emb_tgt)
 
-    # DO normalize DEFAULT
-    Emb_U = normalize(Emb_U_)
-    Emb_L = normalize(Emb_L_)
-
-    print("Data Loaded :     ", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
+    #  print("Data Loaded :     ", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
     Emb_U, User_U, Emb_L, User_L = frontend(args, Emb_U, User_U, Emb_L, User_L)
-    print("Frontend applied :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
+    #  print("Frontend applied :", Emb_U.shape, Emb_L.shape, User_U.shape, User_L.shape)
 
     if not args.test:
-        #  WP_R = Wasserstein_Procrustes_Alignment(
-            #  args, Emb_L, Emb_U,
-            #  verbose=True)
+        if args.wp:
+            WP_R = Wasserstein_Procrustes_Alignment(
+                args, Emb_L, Emb_U,
+                verbose=True)
+        else:
+            WP_R = procrustes(Emb_U, Emb_L)
         
-        WP_R = procrustes(Emb_U, Emb_L)
         print("Compute done, rotation shape :", WP_R.shape)
         np.save(args.rotation, WP_R)
 

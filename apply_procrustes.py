@@ -1,6 +1,5 @@
 import argparse
 from get_align_procrustes import frontend, parse_arguments
-from sklearn.preprocessing import normalize
 import kaldiio
 import numpy as np
 
@@ -15,13 +14,11 @@ def main(args):
         np.array([x_vector_u[i] for i in x_vector_u]),
         np.array([i for i in x_vector_u]),
     )
-    emb, _, _, _ = frontend(args, u_out, u_out_label, np.zeros((512,512)), np.zeros((512,)))
-
-    emb = normalize(emb)
+    _, _, emb, emb_label = frontend(args, np.zeros((512,512)), np.zeros((512,)), u_out, u_out_label)
 
     R_emb = np.dot(emb, R)
 
-    scp_data = {u_out_label[i]: embd for i, embd in enumerate(R_emb)}
+    scp_data = {utt:embd for utt, embd in zip(emb_label, R_emb)}
 
     kaldiio.save_ark(f'{args.emb_out}/transformed_xvector.ark', scp_data, scp=f'{args.emb_out}/transformed_xvector.scp')
 

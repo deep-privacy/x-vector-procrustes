@@ -4,7 +4,8 @@ import kaldiio
 from scipy.spatial.distance import cosine
 from sklearn.metrics import roc_curve
 import numpy as np
-from sklearn.preprocessing import normalize
+
+from get_align_procrustes import frontend, parse_arguments, top1
 
 
 def compute_eer(y_pred, y):
@@ -42,8 +43,26 @@ def main(args):
     with kaldiio.ReadHelper(f'scp:{args.enroll_scp_dir}/{args.enroll_scp}') as reader:
         utt2embd_enroll = {utt:embd for utt, embd in reader}
 
+        l_out, l_out_label = (
+            np.array([utt2embd_enroll[i] for i in utt2embd_enroll]),
+            np.array([i for i in utt2embd_enroll]),
+        )
+
+        l_out, l_out_label, _, _  = frontend(args, l_out, l_out_label, np.zeros((512,512)), np.zeros((512,)))
+
+        utt2embd_enroll = {utt:embd for utt, embd in zip(l_out_label, l_out)}
+
+
     with kaldiio.ReadHelper(f'scp:{args.trial_scp_dir}/{args.trial_scp}') as reader:
         utt2embd_trial = {utt:embd for utt, embd in reader}
+
+        u_out, u_out_label = (
+            np.array([utt2embd_trial[i] for i in utt2embd_trial]),
+            np.array([i for i in utt2embd_trial]),
+        )
+
+        utt2embd_trial = {utt:embd for utt, embd in zip(u_out_label, u_out)}
+
 
     utt2embd_enroll = [utt2embd_enroll[utt] for utt in utt1s]
     utt2embd_trial = [utt2embd_trial[utt] for utt in utt2s]
@@ -54,7 +73,7 @@ def main(args):
     if target is not None:
         eer, threshold = compute_eer(scores, target)
         print("EER: {:.2f}%".format(eer * 100))
-        print("Threshold: {:.2f}".format(threshold))
+        #  print("Threshold: {:.2f}".format(threshold))
 
 
 if __name__ == '__main__':
@@ -65,8 +84,8 @@ if __name__ == '__main__':
 
     #  Average the utterance-level xvectors to get speaker-level xvectors.
     #  https://github.com/kaldi-asr/kaldi/blob/5caf2c0ae46f908e2d97b5b905fd8240ca5ccc9f/egs/sre08/v1/sid/nnet3/xvector/extract_xvectors.sh#L99-L105
-    parser.add_argument('trial_scp_dir')
-    parser.add_argument('enroll_scp_dir')
+    parser.add_argument('trial_scp_dir') # de-anonymized x-vector
+    parser.add_argument('enroll_scp_dir') # original x-vector
 
     parser.add_argument('output')
     parser.add_argument(
@@ -76,7 +95,7 @@ if __name__ == '__main__':
         "--trial-scp", default="xvector.scp", type=str
     )
 
-    args = parser.parse_args()
+    args = parse_arguments(parser)
 
     assert os.path.isfile(args.trials), "NO SUCH FILE: %s" % args.trials
     assert os.path.isdir(args.enroll_scp_dir), "NO SUCH DIRECTORY: %s" % args.enroll_scp_dir

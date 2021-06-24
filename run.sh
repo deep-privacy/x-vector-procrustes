@@ -11,29 +11,49 @@ skip_stage=
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
 
+########
+# Once trained the rotation is applied on the anon-trial set to revert the VoicePrivacy anonymization,
+# Top1 accuracy is calculated between de-anon-trial and trial-anon to asses the reversibility of procrustes (in the x-vector domain)
+# EER / linkability is calculated between de-anon-trial and original enroll
+########
+
 # OLD VERSION (ussing Wasserstein P)
 #  https://github.com/deep-privacy/x-vector-procrustes/commit/f23879559e645b9204689c66bcff99b2a98a7f05
-# Frontend params
-# frontend_train="--pca --pca_n_dim 70"
-# wass_procrustes_param="--niter 512 --bsz 8 --lr 10"  # Hyperparameter found with grid search
 
 # anon xvector extracted with anon model
-retrained_anon_xtractor=true
+retrained_anon_xtractor=false
 
 # procrustes trained on ("f", "m" or "")
 filter_gender=""
+
+# train rotation with wasserstein procrustes instead of procrustes
+wp=false
+
+# Frontend params for wasserstein procrustes
+frontend_train=""
+# frontend_train="--pca --pca_n_dim 70"
+wass_procrustes_param="--niter 512 --bsz 8 --lr 10"  # Hyperparameter found with grid search
+
+# oracle:
+oracle_f=false
+oracle_m=false
 
 
 #=====  end config  =======
 . utils/parse_options.sh || exit 1;
 . ./env.sh
 
+frontend_test="$frontend_train --pca_load_path exp/enroll_train_wp"
+
 anon_xtractor="_retrained_xtractor"
 if ! $retrained_anon_xtractor; then
   anon_xtractor=""
 fi
 
-frontend_test="$frontend_train --pca_load_path exp/enroll_train_wp"
+wp_flag=""
+if $wp; then
+  wp_flag="--wp"
+fi
 
 if [ $stage -le -1 ]; then
   printf "${GREEN}Stage -1: testing x-vector loader${NC}\n"
@@ -77,6 +97,7 @@ fi
 
 slug=original
 if [ $stage -le 0 ]; then
+  # quite useful step to test if the compute_spk_cosine script works
   printf "${GREEN}Reproduce VoicePrivacy EER results with cosine scoring${NC}\n"
   index=0
   for exp in "$anon_exp_parameter" \
@@ -119,6 +140,17 @@ if [ $stage -le 0 ]; then
     done
     printf "\n"
   done
+
+  if $show_vpc_scores; then
+    anon_dset=xvect_libri_test_enrolls_anon
+    original_dset=xvect_libri_test_enrolls
+    printf "${RED}Spk verif scores:${NC}\n"
+    cat ./data/$anon_exp_parameter/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
+    printf "${RED}with retrained x-vector:${NC}\n"
+    cat ./data/${anon_exp_parameter}${anon_xtractor}/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
+    printf "${RED}---${NC}\n"
+  fi
+
 fi
 
 if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
@@ -126,21 +158,15 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
   original_dset=xvect_libri_test_enrolls
 
   # Calculate theorical best likability after training procrustes on test datatest
-  # anon_dset=xvect_libri_test_trials_f_anon
-  # original_dset=xvect_libri_test_trials_f
+  if $oracle_f; then
+    anon_dset=xvect_libri_test_trials_f_anon
+    original_dset=xvect_libri_test_trials_f
+  fi
 
   # Calculate theorical best likability after training procrustes on test datatest
-  # anon_dset=xvect_libri_test_trials_m_anon
-  # original_dset=xvect_libri_test_trials_m
-
-  # ONE OF: xvect_libri_test_trials_f xvect_libri_test_trials_m xvect_libri_test_enrolls
-
-  if $show_vpc_scores; then
-    printf "${RED}Spk verif scores:${NC}\n"
-    cat ./data/$anon_exp_parameter/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
-    printf "${RED}with retrained x-vector:${NC}\n"
-    cat ./data/${anon_exp_parameter}${anon_xtractor}/results/results.txt | grep ".*$(echo $anon_dset | sed -e 's/xvect_//').*" -A 3
-    printf "${RED}---${NC}\n"
+  if $oracle_m; then
+    anon_dset=xvect_libri_test_trials_m_anon
+    original_dset=xvect_libri_test_trials_m
   fi
 
   printf "${GREEN}   DATA prep:\n     - $original_dset \n     - $anon_dset\n == Data used to train procrustes uv ==${NC}\n"
@@ -157,7 +183,7 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
      --filter_gender $filter_gender \
      # --spk_utt_all_combinations
 
-  printf "${GREEN}== Training procrustes UV ==${NC}\n"
+  printf "${GREEN}== Training rotation ==${NC}\n"
 
   expe_dir=exp/enroll_train_wp
 
@@ -167,13 +193,13 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
     --emb_tgt $expe_dir/Emb_L.npy \
     --label_tgt $expe_dir/User_L.npy \
     --rotation exp/WP_R.npy \
-    $frontend_train $wass_procrustes_param
+    $frontend_train $wass_procrustes_param $wp_flag
 
   printf "${GREEN}Done${NC}\n"
 fi
 
 if [ $stage -le 2 ] && ! echo $skip_stage | grep -w -q 2; then
-  printf "${GREEN}== TEST procrustes UV ==${NC}\n"
+  printf "${GREEN}== TEST rotation irreversibility ==${NC}\n"
 
   expe_dir=exp/trials_test
   mkdir -p $expe_dir
@@ -206,7 +232,7 @@ fi
 
 
 if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
-  printf "${GREEN}Perform likability between Anonymized and Orignal speech\\n\
+  printf "==${GREEN} TEST likability between Anonymized and Orignal speech ==\\n\
   Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)\\n\
   Original x-vector -> (extracted by a x-vector trained on anonymized speech) ${NC}\n"
 
@@ -215,21 +241,9 @@ if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
     python ./apply_procrustes.py \
       --emb_in ./data/${exp}/xvect_libri_test_trials_${dset}_anon/xvector.scp \
       --emb_out ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
+      --emb_src $expe_dir/nan --test \
       --rotation ./exp/WP_R.npy \
       $frontend_test
-  done
-
-  for dset in "f" "m";do
-    exp_o="$anon_exp_parameter"
-    exp_a="$anon_exp_parameter${anon_xtractor}"
-
-    printf "**ASV: ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
-    python compute_spk_cosine.py \
-      ./data/${exp_a}/xvect_libri_test_trials_${dset}/meta/trials \
-      ./data/${exp_a}/xvect_libri_test_trials_${dset}_anon/ \
-      ./data/${exp_o}/xvect_libri_test_enrolls/ \
-     ./exp/cosine_scores.txt \
-     --trial-scp xvector.scp
   done
 
   for dset in "f" "m";do
@@ -242,6 +256,7 @@ if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
       ./data/${exp_a}/xvect_libri_test_trials_${dset}_anon/ \
       ./data/${exp_o}/xvect_libri_test_enrolls/ \
      ./exp/cosine_scores.txt \
-     --trial-scp transformed_xvector.scp
+     --trial-scp transformed_xvector.scp \
+      $frontend_test --test
   done
 fi
