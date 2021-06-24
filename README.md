@@ -626,5 +626,188 @@ EER: 27.17%
 
 </details>
 
+---
+
+### Wasserstein Procrustes
+#### x-tractor anon
+
+Wasserstein Procrustes linkability and reversibility Scores x-tractor anon:
+```sh
+./run.sh --stage 1 --wp true --retrained-anon-xtractor true
+```
+
+<details>
+
+<summary> results:</summary>
+
+```wiki
+== Training rotation ==
+Alignment Done
+Compute done, rotation shape : (512, 512)
+Top   1:        99.09    14.38
+Done
+== TEST rotation irreversibility ==
+**Accuracy enrolls anonymized => procrustes => enrolls - original**
+Top   1:        99.09    14.38
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Top   1:        57.22    2.32
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Top   1:        60.24    2.36
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+EER: 31.44%
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+EER: 24.22%
+```
+
+</details>
+
+
+Wasserstein Procrustes linkability and reversibility Scores x-tractor anon gender specific training:
+```sh
+./run.sh --stage 1 --filter_gender f --wp true --retrained-anon-xtractor true
+./run.sh --stage 1 --filter_gender m --wp true --retrained-anon-xtractor true
+```
+
+<details>
+
+<summary> results (merged):</summary>
+
+```wiki
+Filtering by gender f
+Alignment Done
+Compute done, rotation shape : (512, 512)
+Top   1:        99.61    25.20
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Top   1:        48.64    2.86
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+EER: 28.65%
+
+
+Filtering by gender m
+Alignment Done
+Compute done, rotation shape : (512, 512)
+Top   1:        99.46    16.85
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Top   1:        47.11    2.49
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+EER: 24.01%
+```
+
+</details>
+
+Wasserstein Procrustes linkability and reversibility Scores x-tractor anon with pca on x-vector:
+```sh
+./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true
+```
+
+<details>
+
+<summary> results:</summary>
+
+```wiki
+== Training rotation ==
+Computing PCA, 70 dimensions
+(438, 70) total explained variance ratio : 0.98974174
+(438, 70) total explained variance ratio : 0.98574114
+Alignment Done
+Compute done, rotation shape : (70, 70)
+Top   1:        95.43    10.27
+Done
+== TEST rotation irreversibility ==
+**Accuracy enrolls anonymized => procrustes => enrolls - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        95.43    10.27
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        48.50    2.04
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        62.07    2.10
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 21.58%
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 23.64%
+```
+
+</details>
+
+
+Wasserstein Procrustes linkability and reversibility Scores x-tractor anon gender specific training with pca on x-vector:
+```sh
+./run.sh --stage 1 --filter_gender f --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true
+./run.sh --stage 1 --filter_gender m --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true
+```
+
+<details>
+
+<summary> results (merged):</summary>
+
+```wiki
+Filtering by gender f
+== Training rotation ==
+Computing PCA, 70 dimensions
+(254, 70) total explained variance ratio : 0.9914975
+(254, 70) total explained variance ratio : 0.9798415
+Alignment Done
+Compute done, rotation shape : (70, 70)
+Top   1:        98.43    22.83
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        57.36    2.45
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 14.03%
+
+
+Filtering by gender m
+== Training rotation ==
+Computing PCA, 70 dimensions
+(184, 70) total explained variance ratio : 0.9933953
+(184, 70) total explained variance ratio : 0.9853457
+Alignment Done
+Compute done, rotation shape : (70, 70)
+Top   1:        100.00   35.33
+Done
+== TEST rotation irreversibility ==
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        61.42    3.02
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 13.18%
+```
+
+</details>
+
 
 ---
