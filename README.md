@@ -9,6 +9,7 @@ x-vector-procrustes
 
 ### Experiments
 
+### VoicePrivacy
 
 VoicePrivacy linkability Scores *without* retrained ASV on anon data:
 ```sh
@@ -53,6 +54,12 @@ EER: 14.08%
 ```
 
 </details>
+
+
+---
+
+### Procrustes
+#### x-tractor original
 
 
 Procrustes linkability and reversibility Scores x-tractor original:
@@ -254,6 +261,11 @@ EER: 24.45%
 
 </details>
 
+
+---
+
+### Procrustes
+#### x-tractor anon
 
 Procrustes linkability and reversibility Scores x-tractor anon:
 ```sh
