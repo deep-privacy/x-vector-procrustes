@@ -299,47 +299,6 @@ EER: 23.65%
 
 </details>
 
-Procrustes linkability and reversibility Scores x-tractor anon with pca on x-vector:
-```sh
-./run.sh --stage 1 --retrained-anon-xtractor true --frontend-train "--pca --pca_n_dim 70"
-```
-
-<details>
-
-<summary> results:</summary>
-
-```
-== Training rotation ==
-Computing PCA, 70 dimensions
-(438, 70) total explained variance ratio : 0.98974365
-(438, 70) total explained variance ratio : 0.98574036
-Compute done, rotation shape : (70, 70)
-Top   1:        95.66    21.92
-Done
-== TEST rotation irreversibility ==
-**Accuracy enrolls anonymized => procrustes => enrolls - original**
-Loading pca from: exp/enroll_train_wp
-Top   1:        95.66    21.92
-**Accuracy trials_f anonymized => procrustes => trials_f - original**
-Loading pca from: exp/enroll_train_wp
-Top   1:        51.91    2.59
-**Accuracy trials_m anonymized => procrustes => trials_m - original**
-Loading pca from: exp/enroll_train_wp
-Top   1:        56.96    2.36
-== TEST likability between Anonymized and Orignal speech ==
-  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
-  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
-Loading pca from: exp/enroll_train_wp
-**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
-Loading pca from: exp/enroll_train_wp
-EER: 21.54%
-**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
-Loading pca from: exp/enroll_train_wp
-EER: 23.14%
-```
-
-</details>
-
 Procrustes linkability and reversibility Scores x-tractor anon gender specific training:
 ```sh
 ./run.sh --stage 1 --retrained-anon-xtractor true --filter_gender f
@@ -396,6 +355,48 @@ EER: 21.15%
 ```
 
 </details>
+
+Procrustes linkability and reversibility Scores x-tractor anon with pca on x-vector:
+```sh
+./run.sh --stage 1 --retrained-anon-xtractor true --frontend-train "--pca --pca_n_dim 70"
+```
+
+<details>
+
+<summary> results:</summary>
+
+```
+== Training rotation ==
+Computing PCA, 70 dimensions
+(438, 70) total explained variance ratio : 0.98974365
+(438, 70) total explained variance ratio : 0.98574036
+Compute done, rotation shape : (70, 70)
+Top   1:        95.66    21.92
+Done
+== TEST rotation irreversibility ==
+**Accuracy enrolls anonymized => procrustes => enrolls - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        95.66    21.92
+**Accuracy trials_f anonymized => procrustes => trials_f - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        51.91    2.59
+**Accuracy trials_m anonymized => procrustes => trials_m - original**
+Loading pca from: exp/enroll_train_wp
+Top   1:        56.96    2.36
+== TEST likability between Anonymized and Orignal speech ==
+  Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
+  Original x-vector -> (extracted by a x-vector trained on anonymized speech)
+Loading pca from: exp/enroll_train_wp
+**ASV: test_trials_f anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 21.54%
+**ASV: test_trials_m anonymized => procrustes <=> test_enrolls - original**
+Loading pca from: exp/enroll_train_wp
+EER: 23.14%
+```
+
+</details>
+
 
 
 Procrustes linkability and reversibility Scores x-tractor anon gender specific training and pca on x-vector:
