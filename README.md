@@ -19,7 +19,7 @@ VoicePrivacy linkability Scores *without* retrained ASV on anon data:
 
 <summary> results:</summary>
 
-```
+```wiki
 **ASV (original): test_trials_f original <=> test_enrolls - original**
 EER: 10.33%
 **ASV (original): test_trials_m original <=> test_enrolls - original**
@@ -45,7 +45,7 @@ VoicePrivacy linkability Scores *with* retrained ASV on anon data:
 
 <summary> results:</summary>
 
-```
+```wiki
 Anonymized x-vector -> (extracted by a x-vector trained on anonymized speech)
 **ASV (anon): test_trials_f anonymized <=> test_enrolls - anonymized**
 EER: 17.12%
@@ -71,7 +71,7 @@ Procrustes linkability and reversibility Scores x-tractor original:
 
 <summary> results:</summary>
 
-```
+```wiki
 == Training rotation ==
 Compute done, rotation shape : (512, 512)
 Top   1:        96.12    34.47
@@ -104,7 +104,7 @@ Procrustes linkability and reversibility Scores x-tractor original gender specif
 
 <summary> results (merged):</summary>
 
-```
+```wiki
  == Data used to train procrustes uv ==
 Filtering by gender f
 x_vector_l samples: 438
@@ -161,7 +161,7 @@ Procrustes linkability and reversibility Scores x-tractor original with pca on x
 
 <summary> results:</summary>
 
-```
+```wiki
 == Training rotation ==
 Computing PCA, 70 dimensions
 (438, 70) total explained variance ratio : 0.98974127
@@ -203,7 +203,7 @@ Procrustes linkability and reversibility Scores x-tractor original gender specif
 
 <summary> results (merged):</summary>
 
-```
+```wiki
  == Data used to train procrustes uv ==
 Filtering by gender f
 x_vector_l samples: 438
@@ -276,7 +276,7 @@ Procrustes linkability and reversibility Scores x-tractor anon:
 
 <summary> results:</summary>
 
-```
+```wiki
 == Training rotation ==
 Compute done, rotation shape : (512, 512)
 Top   1:        97.95    30.59
@@ -309,7 +309,7 @@ Procrustes linkability and reversibility Scores x-tractor anon gender specific t
 
 <summary> results (merged):</summary>
 
-```
+```wiki
  == Data used to train procrustes uv ==
 Filtering by gender f
 x_vector_l samples: 438
@@ -365,7 +365,7 @@ Procrustes linkability and reversibility Scores x-tractor anon with pca on x-vec
 
 <summary> results:</summary>
 
-```
+```wiki
 == Training rotation ==
 Computing PCA, 70 dimensions
 (438, 70) total explained variance ratio : 0.98974365
@@ -409,7 +409,7 @@ Procrustes linkability and reversibility Scores x-tractor anon gender specific t
 
 <summary> results (merged):</summary>
 
-```
+```wiki
 == TEST rotation irreversibility ==
 **Accuracy enrolls anonymized => procrustes => enrolls - original**
 Loading pca from: exp/enroll_train_wp
@@ -456,7 +456,7 @@ Wasserstein Procrustes linkability and reversibility Scores x-tractor original:
 
 <summary> results:</summary>
 
-```
+```wiki
 Alignment Done
 Compute done, rotation shape : (512, 512)
 Top   1:        92.92    16.44
@@ -490,7 +490,7 @@ Wasserstein Procrustes linkability and reversibility Scores x-tractor original g
 
 <summary> results (merged):</summary>
 
-```
+```wiki
 Filtering by gender f
 Alignment Done
 Compute done, rotation shape : (512, 512)
@@ -532,7 +532,7 @@ Wasserstein Procrustes linkability and reversibility Scores x-tractor original w
 
 <summary> results:</summary>
 
-```
+```wiki
 == Training rotation ==
 Computing PCA, 70 dimensions
 (438, 70) total explained variance ratio : 0.98973745
