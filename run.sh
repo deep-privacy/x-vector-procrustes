@@ -203,7 +203,7 @@ if [ $stage -le 2 ] && ! echo $skip_stage | grep -w -q 2; then
   expe_dir=exp/trials_test
   mkdir -p $expe_dir
 
-  for dset in enrolls trials_f trials_m; do
+  for dset in trials_f trials_m; do
 
     gender_test=${dset: -1}
     if [[ "${gender_test}" != "$filter_gender" ]] && [[ "${filter_gender}" != "" ]]; then
@@ -220,7 +220,7 @@ if [ $stage -le 2 ] && ! echo $skip_stage | grep -w -q 2; then
        ./data/${anon_exp_parameter}${anon_xtractor}/$anon_dset/xvector.scp \
        "$expe_dir/Emb_U" "$expe_dir/User_U" \
        "$expe_dir/Emb_L" "$expe_dir/User_L" \
-       --noplot
+       --noplot # --test-only-train-spk # --test-remove-train-spk
 
     python ./get_align_procrustes.py \
       --emb_src $expe_dir/Emb_U.npy \

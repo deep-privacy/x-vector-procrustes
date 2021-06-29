@@ -46,6 +46,16 @@ parser.add_argument(
 
 # Optional argument
 parser.add_argument(
+    "--test-remove-train-spk", default=False, action="store_true", help="remove spk that are in train and test"
+)
+
+# Optional argument
+parser.add_argument(
+    "--test-only-train-spk", default=False, action="store_true", help="remove spk that are not in train and test"
+)
+
+# Optional argument
+parser.add_argument(
     "--filter_scp_trials_enrolls",
     action="store_true",
     help="All 'Unlabeled' x-vector speaker are present in the 'Label' scp",
@@ -138,15 +148,54 @@ l_out, l_out_label = (
     np.array([x_vector_l[i] for i in x_vector_l]),
     np.array([i.split("-")[0] for i in x_vector_l]).astype(int),
 )
+
 #  print(l_out.shape, l_out_label.shape, set(l_out_label))
 # Convert users id to 0-N numbers
 id_tr, id_en = {x: i for i, x in enumerate(list(set(l_out_label)))}, {
     x: i for i, x in enumerate(list(set(u_out_label)))
 }
+
+if args.test_remove_train_spk or args.test_only_train_spk: # remove/filter spk that are in train and test
+    filename = "./data/x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker/xvect_libri_test_enrolls/meta/spk2gender"
+    with open(filename) as f:
+        content = f.read().splitlines()
+    filter_remove_spk = [a.split(" ")[0] for a in content]
+
+    u_out_t = []
+    u_out_label_t = np.array([])
+    for i in range(len(u_out_label)):
+        label = u_out_label[i]
+        data = u_out[i]
+        if args.test_remove_train_spk and str(label) not in filter_remove_spk or \
+        args.test_only_train_spk and str(label) in filter_remove_spk:
+            u_out_label_t = np.append(u_out_label_t, label)
+            u_out_t.append(data)
+
+    u_out_t = np.array(u_out_t)
+    u_out_label = u_out_label_t
+    u_out = u_out_t
+
+    l_out_t = []
+    l_out_label_t = np.array([])
+    for i in range(len(l_out_label)):
+        label = l_out_label[i]
+        data = l_out[i]
+        if args.test_remove_train_spk and str(label) not in filter_remove_spk or \
+        args.test_only_train_spk and str(label) in filter_remove_spk:
+            l_out_label_t = np.append(l_out_label_t, label)
+            l_out_t.append(data)
+
+    l_out_t = np.array(l_out_t)
+    l_out_label = l_out_label_t
+    l_out = l_out_t
+
+
+
 u_out_label, l_out_label = (
     np.array([id_en[i] for i in u_out_label]).astype(int),
     np.array([id_tr[i] for i in l_out_label]).astype(int),
 )
+
 
 if args.spk_utt_all_combinations:
 
