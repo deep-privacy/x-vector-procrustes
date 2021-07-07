@@ -128,7 +128,7 @@ ASV-libri_test_enrolls_anon-libri_test_trials_m_anon
 #### x-tractor original
 
 
-Procrustes linkability and reversibility Scores x-tractor original:
+Procrustes linkability and invertibility Scores x-tractor original:
 ```sh
 ./run.sh --stage 1
 ```
@@ -168,7 +168,7 @@ linkability: 0.310689
 
 </details>
 
-Procrustes linkability and reversibility Scores x-tractor original gender specific training:
+Procrustes linkability and invertibility Scores x-tractor original gender specific training:
 ```sh
 ./run.sh --stage 1 --filter_gender f
 ./run.sh --stage 1 --filter_gender m
@@ -236,7 +236,7 @@ linkability: 0.288890
 </details>
 
 
-Procrustes linkability and reversibility Scores x-tractor original with pca on x-vector:
+Procrustes linkability and invertibility Scores x-tractor original with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70"
 ```
@@ -285,7 +285,7 @@ linkability: 0.278785
 
 </details>
 
-Procrustes linkability and reversibility Scores x-tractor original gender specific training with pca on x-vector:
+Procrustes linkability and invertibility Scores x-tractor original gender specific training with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --filter_gender f --frontend-train "--pca --pca_n_dim 70"
 ./run.sh --stage 1 --filter_gender m --frontend-train "--pca --pca_n_dim 70"
@@ -370,7 +370,7 @@ linkability: 0.443180
 ### Procrustes
 #### x-tractor anon
 
-Procrustes linkability and reversibility Scores x-tractor anon:
+Procrustes linkability and invertibility Scores x-tractor anon:
 ```sh
 ./run.sh --stage 1 --retrained-anon-xtractor true
 ```
@@ -410,7 +410,7 @@ linkability: 0.457706
 
 </details>
 
-Procrustes linkability and reversibility Scores x-tractor anon gender specific training:
+Procrustes linkability and invertibility Scores x-tractor anon gender specific training:
 ```sh
 ./run.sh --stage 1 --retrained-anon-xtractor true --filter_gender f
 ./run.sh --stage 1 --retrained-anon-xtractor true --filter_gender m
@@ -477,7 +477,7 @@ linkability: 0.481244
 
 </details>
 
-Procrustes linkability and reversibility Scores x-tractor anon with pca on x-vector:
+Procrustes linkability and invertibility Scores x-tractor anon with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --retrained-anon-xtractor true --frontend-train "--pca --pca_n_dim 70"
 ```
@@ -528,7 +528,7 @@ linkability: 0.456137
 
 
 
-Procrustes linkability and reversibility Scores x-tractor anon gender specific training and pca on x-vector:
+Procrustes linkability and invertibility Scores x-tractor anon gender specific training and pca on x-vector:
 ```sh
 ./run.sh --stage 1 --retrained-anon-xtractor true --filter_gender f --frontend-train "--pca --pca_n_dim 70"
 ./run.sh --stage 1 --retrained-anon-xtractor true --filter_gender m --frontend-train "--pca --pca_n_dim 70"
@@ -612,7 +612,7 @@ linkability: 0.648048
 ### Wasserstein Procrustes
 #### x-tractor original
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor original:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor original:
 ```sh
 ./run.sh --stage 1 --wp true
 ```
@@ -653,7 +653,7 @@ linkability: 0.260842
 </details>
 
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor original gender specific training:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor original gender specific training:
 ```sh
 ./run.sh --stage 1 --filter_gender f --wp true
 ./run.sh --stage 1 --filter_gender m --wp true
@@ -720,7 +720,7 @@ linkability: 0.226058
 
 </details>
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor original with pca on x-vector:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor original with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --wp true
 ```
@@ -770,7 +770,7 @@ linkability: 0.216760
 </details>
 
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor original gender specific training with pca on x-vector:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor original gender specific training with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --filter_gender f --frontend-train "--pca --pca_n_dim 70" --wp true
 ./run.sh --stage 1 --filter_gender m --frontend-train "--pca --pca_n_dim 70" --wp true
@@ -854,7 +854,7 @@ linkability: 0.376375
 ### Wasserstein Procrustes
 #### x-tractor anon
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor anon:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor anon:
 ```sh
 ./run.sh --stage 1 --wp true --retrained-anon-xtractor true
 ```
@@ -895,7 +895,7 @@ linkability: 0.442820
 </details>
 
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor anon gender specific training:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor anon gender specific training:
 ```sh
 ./run.sh --stage 1 --filter_gender f --wp true --retrained-anon-xtractor true
 ./run.sh --stage 1 --filter_gender m --wp true --retrained-anon-xtractor true
@@ -962,7 +962,7 @@ linkability: 0.435266
 
 </details>
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor anon with pca on x-vector:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor anon with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true
 ```
@@ -1012,7 +1012,7 @@ linkability: 0.418139
 </details>
 
 
-Wasserstein Procrustes linkability and reversibility Scores x-tractor anon gender specific training with pca on x-vector:
+Wasserstein Procrustes linkability and invertibility Scores x-tractor anon gender specific training with pca on x-vector:
 ```sh
 ./run.sh --stage 1 --filter_gender f --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true
 ./run.sh --stage 1 --filter_gender m --frontend-train "--pca --pca_n_dim 70" --wp true --retrained-anon-xtractor true
