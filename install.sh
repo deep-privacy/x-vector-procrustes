@@ -37,6 +37,17 @@ if [ ! -f $mark ]; then
   pip install matplotlib==3.4.1
   pip install pot==0.7.0
   pip install torch==1.7.1
+  pip install pandas==1.0.5
+  pip install seaborn==0.10.1
+  cd $home
+  touch $mark
+fi
+
+mark=.done-anonymization_metrics
+if [ ! -f $mark ]; then
+  cd utils
+  git clone https://gitlab.inria.fr/magnet/anonymization_metrics.git
+  git checkout 4787d4f
   cd $home
   touch $mark
 fi

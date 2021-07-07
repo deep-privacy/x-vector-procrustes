@@ -10,6 +10,7 @@ show_vpc_scores=true
 skip_stage=
 
 anon_exp_parameter="x_vector_vpc__crossgender=false__f0transformation=false__diffpseudospeaker"
+verbose=""
 
 ########
 # Once trained the rotation is applied on the anon-trial set to revert the VoicePrivacy anonymization,
@@ -115,6 +116,11 @@ if [ $stage -le 0 ]; then
         ./data/${exp}/xvect_libri_test_trials_${dset}/ \
         ./data/${exp}/xvect_libri_test_enrolls/ \
        ./exp/cosine_scores.txt
+
+      PYTHONPATH=$(realpath ./utils/anonymization_metrics) \
+        python ./utils/compute_metrics.py \
+        -k ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        -s ./exp/cosine_scores.txt
     done
     for dset in "f" "m";do
       printf "**ASV ($slug): ${RED}test_trials_${dset} ${GREEN}anonymized${NC} <=> ${RED}test_enrolls - ${GREEN}original${RED}${NC}**\n"
@@ -123,6 +129,11 @@ if [ $stage -le 0 ]; then
         ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
         ./data/${exp}/xvect_libri_test_enrolls/ \
        ./exp/cosine_scores.txt
+
+      PYTHONPATH=$(realpath ./utils/anonymization_metrics) \
+        python ./utils/compute_metrics.py \
+        -k ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        -s ./exp/cosine_scores.txt
     done
   index=1
   fi
@@ -134,6 +145,11 @@ if [ $stage -le 0 ]; then
         ./data/${exp}/xvect_libri_test_trials_${dset}_anon/ \
         ./data/${exp}/xvect_libri_test_enrolls_anon/ \
        ./exp/cosine_scores.txt
+
+      PYTHONPATH=$(realpath ./utils/anonymization_metrics) \
+        python ./utils/compute_metrics.py \
+        -k ./data/${exp}/xvect_libri_test_trials_${dset}/meta/trials \
+        -s ./exp/cosine_scores.txt
     done
     printf "\n"
   done
@@ -168,7 +184,7 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
     original_dset=xvect_libri_test_trials_m
   fi
 
-  printf "${GREEN}   DATA prep:\n     - $original_dset \n     - $anon_dset\n == Data used to train procrustes uv ==${NC}\n"
+  printf "${GREEN}   == Data used to train rotation ==\n     - $original_dset \n     - $anon_dset${NC}\n"
 
   expe_dir=exp/enroll_train_wp
   mkdir -p $expe_dir
@@ -192,7 +208,7 @@ if [ $stage -le 1 ] && ! echo $skip_stage | grep -w -q 1; then
     --emb_tgt $expe_dir/Emb_L.npy \
     --label_tgt $expe_dir/User_L.npy \
     --rotation exp/WP_R.npy \
-    $frontend_train $wass_procrustes_param $wp_flag
+    $frontend_train $wass_procrustes_param $wp_flag $verbose
 
   printf "${GREEN}Done${NC}\n"
 fi
@@ -270,5 +286,10 @@ if [ $stage -le 3 ] && ! echo $skip_stage | grep -w -q 3; then
      ./exp/cosine_scores.txt \
      --trial-scp transformed_xvector.scp \
       $frontend_test --test
+
+    PYTHONPATH=$(realpath ./utils/anonymization_metrics) \
+      python ./utils/compute_metrics.py \
+      -k ./data/${exp_a}/xvect_libri_test_trials_${dset}/meta/trials \
+      -s ./exp/cosine_scores.txt
   done
 fi

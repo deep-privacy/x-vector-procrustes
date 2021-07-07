@@ -123,7 +123,7 @@ if args.filter_gender != "" and args.filter_gender:
     ) as f:
         spk2gender = f.read().splitlines()
         spk2gender = {spk:gender for spk, gender in list(map(lambda x: x.split(" "), spk2gender))}
-    print(f"Filtering by gender {args.filter_gender}")
+    print(f"\nFiltering by gender {args.filter_gender}")
     print("x_vector_l samples:", len(x_vector_l))
     print("x_vector_u samples:", len(x_vector_u))
     for k, m in x_vector_u.copy().items():

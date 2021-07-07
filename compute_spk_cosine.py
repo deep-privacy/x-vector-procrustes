@@ -68,11 +68,18 @@ def main(args):
     utt2embd_trial = [utt2embd_trial[utt] for utt in utt2s]
 
     scores = cosine_scoring(utt2embd_enroll, utt2embd_trial)
-    np.savetxt(args.output, scores, fmt='%.4f')
+    score_file_kaldi = []
+    for enroll, trial, score in zip(utt1s, utt2s, scores):
+        score_file_kaldi.append([enroll, trial, str(score)])
+
+    with open(args.output, "w") as txt_file:
+        for line in score_file_kaldi:
+            txt_file.write(" ".join(line) + "\n") # works with any number of elements in a line
+
 
     if target is not None:
         eer, threshold = compute_eer(scores, target)
-        print("EER: {:.2f}%".format(eer * 100))
+        print("ROC_EER: {:.2f}".format(eer * 100))
         #  print("Threshold: {:.2f}".format(threshold))
 
 

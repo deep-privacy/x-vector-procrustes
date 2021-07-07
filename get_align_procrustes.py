@@ -71,6 +71,10 @@ def parse_arguments(parser):
     parser.add_argument(
         "--reg", default=0.05, type=float, help="Regularization parameter for sinkhorn"
     )
+    parser.add_argument(
+        "--noverbose", action="store_true", help="No verbose"
+    )
+
     args = parser.parse_args()
     return args
 
@@ -114,9 +118,9 @@ def align(X, Y, R, lr, bsz, nepoch, niter, corres, nmax, reg, verbose, last_iter
                 "epoch: %d\t batchSize: %d\t niter: %d\t Wass_dist: %.3f\t distance: %.4f"
                 % (epoch, bsz, niter, objective(X, Y, R), np.mean( [np.linalg.norm(X[i] - np.dot(Y[corres[i]], R)) for i in range(len(Y))] )),
             )
-        if niter == 0 or ((not last_iter) and bsz >= min(len(X), len(Y))):
-            print("Stopping alignment batchSize %d > total labels" % bsz)
-            break
+            if niter == 0 or ((not last_iter) and bsz >= min(len(X), len(Y))):
+                print("Stopping alignment batchSize %d > total labels" % bsz)
+                break
     if verbose:
         print("Alignment Done")
     return R
@@ -234,16 +238,18 @@ def frontend(args, Emb_U_, User_U, Emb_L_, User_L):
         pk.dump(pca, open(expdir + "/pca_emb_u.pkl", "wb"))
         Emb_U = pca.transform(Emb_U_)
         print(
+            "Output shape after PCA:",
             Emb_U.shape,
-            "total explained variance ratio :",
+            "with a total explained variance ratio on clear data:",
             np.sum(pca.explained_variance_ratio_),
         )
         pca = PCA(n_components=d).fit(Emb_L_)
         pk.dump(pca, open(expdir + "/pca_emb_l.pkl", "wb"))
         Emb_L = pca.transform(Emb_L_)
         print(
+            "Output shape after PCA:",
             Emb_L.shape,
-            "total explained variance ratio :",
+            "total explained variance ratio on target(anonymized) data:",
             np.sum(pca.explained_variance_ratio_),
         )
         # DO normalize by DEFAULT
@@ -348,10 +354,12 @@ if __name__ == "__main__":
 
     if not args.test:
         if args.wp:
+            print("Wasserstein Procrustes rotation estimation")
             WP_R = Wasserstein_Procrustes_Alignment(
                 args, Emb_L, Emb_U,
-                verbose=True)
+                verbose=not args.noverbose)
         else:
+            print("Procrustes rotation estimation")
             WP_R = procrustes(Emb_U, Emb_L)
         
         print("Compute done, rotation shape :", WP_R.shape)
@@ -362,8 +370,8 @@ if __name__ == "__main__":
 
 
     acc_U, acc_F = top1(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L)
-    print("Top {:3}:\t{:.2f}\t {:.2f}".format(1, acc_U, acc_F))
+    print("Top {:3}:\t{:.2f} (speaker accuracy)\t {:.2f} (segment accuracy)".format(1, acc_U, acc_F))
     if args.top_k:
         for n in [3,5,10,len(User_L)]:
             acc_U, acc_F = topn(Emb_U, np.dot(Emb_L, WP_R), User_U, User_L, n=n)
-            print("Top {:3}:\t{:.2f}\t {:.2f}".format(n,acc_U, acc_F))
+            print("Top {:3}:\t{:.2f} (speaker accuracy)\t {:.2f} (segment accuracy)".format(n, acc_U, acc_F))
