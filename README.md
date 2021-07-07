@@ -1253,13 +1253,14 @@ linkability: 0.746411
 
 </details>
 
+---
 
 #### Create this file by with vim
 
-Put your cursor on the shell command and type @q (@b for the second line if any).  
-The result block will be updated
+Put your cursor on the shell command and type `@q` (`@b` for the second line if any).  
+The coorsponding result block will be updated.
 
-The `q` macro (be a ; : remapper!):
+The `q` and `b` macro definitions (be a ; : remapper!):
 ```viml
 let @q = '^"ay$/wikijV/``kdk;read ! a --verbose "--noverbose" | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"'
 let @b = '^"ay$/wikij/``koo;read ! a --verbose "--noverbose" | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"'
