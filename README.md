@@ -1255,7 +1255,7 @@ linkability: 0.746411
 
 ---
 
-#### Create this file by with vim
+#### Create this file with vim
 
 Put your cursor on the shell command and type `@q` (`@b` for the second line if any).  
 The coorsponding result block will be updated.
