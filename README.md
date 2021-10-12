@@ -1,6 +1,21 @@
 x-vector-procrustes
 ===================
 
+This repository provides a python implementation of [Invertibility of a Voice Privacy System using Embedding Alignment](https://hal.archives-ouvertes.fr/hal-03356021), which enables unsupervised speaker-de-anonymization conversion using Wasserstein-Procrustes and Procrustes.
+The proposed method can recover up to 62% of the speaker identities from anonymized x-vectors. 
+
+```bibtex
+@inproceedings{vpc_invertibility,
+  TITLE = {{On the invertibility of a voice privacy system using embedding alignement}},
+  AUTHOR = {Champion, Pierre and Thebaud, Thomas and Le Lan, Ga{\"e}l and Larcher, Anthony and Jouvet, Denis},
+  URL = {https://hal.archives-ouvertes.fr/hal-03356021},
+  BOOKTITLE = {{ASRU 2021 - IEEE Automatic Speech Recognition and Understanding Workshop}},
+  ADDRESS = {Cartagena, Colombia},
+  YEAR = {2021},
+}
+
+```
+
 ### Installation
 
 ```sh
@@ -1262,6 +1277,12 @@ The coorsponding result block will be updated.
 
 The `q` and `b` macro definitions (be a ; : remapper!):
 ```viml
-let @q = '^"ay$/wikijV/``kdk;read ! a --verbose "--noverbose" | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"'
-let @b = '^"ay$/wikij/``koo;read ! a --verbose "--noverbose" | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"'
+let @q = '^"ay$/wiki
+jV/``
+kdk;read ! a --verbose "--noverbose" | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"
+'
+let @b = '^"ay$/wiki
+j/``
+koo;read ! a --verbose "--noverbose" | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"
+'
 ```
