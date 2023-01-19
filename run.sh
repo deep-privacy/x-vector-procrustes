@@ -41,6 +41,9 @@ oracle_m=false
 . utils/parse_options.sh || exit 1;
 . ./env.sh
 
+
+mkdir -p exp
+
 frontend_test="$frontend_train --pca_load_path exp/enroll_train_wp"
 
 anon_xtractor="_retrained_xtractor"

@@ -47,7 +47,7 @@ mark=.done-anonymization_metrics
 if [ ! -f $mark ]; then
   cd utils
   git clone https://gitlab.inria.fr/magnet/anonymization_metrics.git
-  git checkout 4787d4f
+  # git checkout 4787d4f
   cd $home
   touch $mark
 fi
